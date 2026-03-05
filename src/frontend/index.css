@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Bricolage Grotesque ─── */
+@font-face {
+  font-family: "Bricolage Grotesque";
+  src: url("/assets/fonts/BricolageGrotesque-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ─── General Sans ─── */
+@font-face {
+  font-family: "General Sans";
+  src: url("/assets/fonts/GeneralSans-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+
+    /* ─── GARDA Color System ─── */
+    /* Primary: Biru GARDA */
+    --primary: 0.47 0.18 230;
+    --primary-foreground: 0.98 0 0;
+    /* Dark Blue */
+    --primary-dark: 0.35 0.16 230;
+    /* Gold accent */
+    --gold: 0.75 0.13 85;
+
+    /* Backgrounds */
+    --background: 0.99 0 0;
+    --foreground: 0.14 0 0;
+
+    /* Card */
+    --card: 1 0 0;
+    --card-foreground: 0.14 0 0;
+
+    /* Popover */
+    --popover: 1 0 0;
+    --popover-foreground: 0.14 0 0;
+
+    /* Secondary */
+    --secondary: 0.96 0 0;
+    --secondary-foreground: 0.14 0 0;
+
+    /* Muted */
+    --muted: 0.95 0 0;
+    --muted-foreground: 0.45 0 0;
+
+    /* Accent - Gold */
+    --accent: 0.75 0.13 85;
+    --accent-foreground: 0.14 0 0;
+
+    /* Destructive */
+    --destructive: 0.47 0.18 25;
+    --destructive-foreground: 0.98 0 0;
+
+    /* Border/Input */
+    --border: 0.9 0 0;
+    --input: 0.88 0 0;
+    --ring: 0.47 0.18 230;
+
+    /* Charts */
+    --chart-1: 0.47 0.18 230;
+    --chart-2: 0.75 0.13 85;
+    --chart-3: 0.35 0.16 230;
+    --chart-4: 0.6 0.1 0;
+    --chart-5: 0.8 0.15 60;
+
+    /* Sidebar */
+    --sidebar: 0.98 0 0;
+    --sidebar-foreground: 0.14 0 0;
+    --sidebar-primary: 0.47 0.18 230;
+    --sidebar-primary-foreground: 0.98 0 0;
+    --sidebar-accent: 0.95 0 0;
+    --sidebar-accent-foreground: 0.14 0 0;
+    --sidebar-border: 0.9 0 0;
+    --sidebar-ring: 0.47 0.18 230;
+  }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "General Sans", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Bricolage Grotesque", sans-serif;
+    font-weight: 700;
+  }
+}
+
+@layer utilities {
+  .text-garda-blue {
+    color: oklch(var(--primary));
+  }
+  .bg-garda-blue {
+    background-color: oklch(var(--primary));
+  }
+  /* Keep garda-red as alias for backward compat in admin */
+  .text-garda-red {
+    color: oklch(var(--primary));
+  }
+  .bg-garda-red {
+    background-color: oklch(var(--primary));
+  }
+  .bg-garda-dark {
+    background-color: oklch(var(--primary-dark));
+  }
+  .text-garda-gold {
+    color: oklch(var(--gold));
+  }
+  .bg-garda-gold {
+    background-color: oklch(var(--gold));
+  }
+  .border-garda-red {
+    border-color: oklch(var(--primary));
+  }
+  .hover-garda-red:hover {
+    background-color: oklch(var(--primary-dark));
+  }
+}
