@@ -1,3 +1,5 @@
+import LeafletMap from "@/components/LeafletMap";
+import type { MapMarker } from "@/components/LeafletMap";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -986,10 +988,13 @@ function PetaSection() {
   const { data: locations, isLoading } = useGetLocations();
   const hasLocations = locations && locations.length > 0;
 
-  // Build map bbox — use first location or full Indonesia
-  const mapSrc = hasLocations
-    ? `https://www.openstreetmap.org/export/embed.html?bbox=${locations[0].longitude - 0.05},${locations[0].latitude - 0.05},${locations[0].longitude + 0.05},${locations[0].latitude + 0.05}&layer=mapnik&marker=${locations[0].latitude},${locations[0].longitude}`
-    : "https://www.openstreetmap.org/export/embed.html?bbox=94,-11,141,6&layer=mapnik";
+  const mapMarkers: MapMarker[] = (locations ?? []).map((loc) => ({
+    id: loc.id,
+    lat: loc.latitude,
+    lng: loc.longitude,
+    title: loc.nama,
+    subtitle: `${loc.kota}, ${loc.provinsi}`,
+  }));
 
   const formatTanggal = (tanggal: string) => {
     if (!tanggal) return "-";
@@ -1039,14 +1044,13 @@ function PetaSection() {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="w-full rounded-2xl overflow-hidden border border-border shadow-card mb-10"
-          style={{ height: "400px" }}
+          className="mb-10"
         >
           {isLoading ? (
             <div
               data-ocid="peta.loading_state"
-              className="w-full h-full flex items-center justify-center"
-              style={{ background: "oklch(0.96 0.01 230)" }}
+              className="w-full rounded-2xl flex items-center justify-center border border-border shadow-card"
+              style={{ height: "400px", background: "oklch(0.96 0.01 230)" }}
             >
               <div className="text-center">
                 <Loader2 className="w-8 h-8 animate-spin text-garda-blue mx-auto mb-2" />
@@ -1056,13 +1060,12 @@ function PetaSection() {
               </div>
             </div>
           ) : (
-            <iframe
-              title="Peta Sebaran Lokasi Penyuluhan"
-              src={mapSrc}
-              width="100%"
-              height="100%"
-              style={{ border: "none" }}
-              loading="lazy"
+            <LeafletMap
+              markers={mapMarkers}
+              height={400}
+              fitBounds={mapMarkers.length > 1}
+              zoom={13}
+              className="shadow-card"
             />
           )}
         </motion.div>

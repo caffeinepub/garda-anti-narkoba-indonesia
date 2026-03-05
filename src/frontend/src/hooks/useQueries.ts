@@ -328,7 +328,16 @@ function loadLocalLocations(): Location[] {
   try {
     const raw = localStorage.getItem(LOCATIONS_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as Location[];
+    // Re-hydrate jumlahPeserta as BigInt (stored as string due to JSON serialisation)
+    const parsed = JSON.parse(raw) as Array<
+      Omit<Location, "jumlahPeserta"> & {
+        jumlahPeserta: string | number | bigint;
+      }
+    >;
+    return parsed.map((l) => ({
+      ...l,
+      jumlahPeserta: BigInt(String(l.jumlahPeserta ?? 0)),
+    }));
   } catch {
     return [];
   }
@@ -336,7 +345,12 @@ function loadLocalLocations(): Location[] {
 
 function saveLocalLocations(locations: Location[]): void {
   try {
-    localStorage.setItem(LOCATIONS_KEY, JSON.stringify(locations));
+    // Serialise BigInt as plain number string so JSON.stringify doesn't throw
+    const serialisable = locations.map((l) => ({
+      ...l,
+      jumlahPeserta: Number(l.jumlahPeserta),
+    }));
+    localStorage.setItem(LOCATIONS_KEY, JSON.stringify(serialisable));
   } catch {
     // ignore
   }
@@ -380,7 +394,13 @@ function loadLocalGallery(): GalleryItem[] {
   try {
     const raw = localStorage.getItem(GALLERY_KEY);
     if (!raw) return [];
-    return JSON.parse(raw) as GalleryItem[];
+    const parsed = JSON.parse(raw) as Array<
+      Omit<GalleryItem, "tanggal"> & { tanggal: string | number | bigint }
+    >;
+    return parsed.map((g) => ({
+      ...g,
+      tanggal: BigInt(String(g.tanggal ?? 0)),
+    }));
   } catch {
     return [];
   }
@@ -388,7 +408,11 @@ function loadLocalGallery(): GalleryItem[] {
 
 function saveLocalGallery(items: GalleryItem[]): void {
   try {
-    localStorage.setItem(GALLERY_KEY, JSON.stringify(items));
+    const serialisable = items.map((g) => ({
+      ...g,
+      tanggal: Number(g.tanggal),
+    }));
+    localStorage.setItem(GALLERY_KEY, JSON.stringify(serialisable));
   } catch {
     // ignore
   }

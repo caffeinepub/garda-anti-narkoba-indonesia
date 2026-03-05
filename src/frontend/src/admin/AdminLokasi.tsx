@@ -1,3 +1,4 @@
+import LeafletMap from "@/components/LeafletMap";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,25 +97,18 @@ const EMPTY_FORM: LocationForm = {
   keterangan: "",
 };
 
-function MapPreview({ lat, lng }: { lat: number; lng: number }) {
-  const delta = 0.05;
-  const bbox = `${lng - delta},${lat - delta},${lng + delta},${lat + delta}`;
-  const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
-
+function MapPreview({
+  lat,
+  lng,
+  title,
+}: { lat: number; lng: number; title?: string }) {
   return (
-    <div
-      className="w-full rounded-xl overflow-hidden border border-border"
-      style={{ height: "300px" }}
-    >
-      <iframe
-        title="Peta Lokasi"
-        src={src}
-        width="100%"
-        height="100%"
-        style={{ border: "none" }}
-        loading="lazy"
-      />
-    </div>
+    <LeafletMap
+      markers={[{ id: "preview", lat, lng, title: title ?? "Lokasi" }]}
+      height={300}
+      fitBounds={false}
+      zoom={14}
+    />
   );
 }
 
@@ -412,7 +406,11 @@ export default function AdminLokasi() {
                 </span>
               )}
             </Label>
-            <MapPreview lat={parsedLat} lng={parsedLng} />
+            <MapPreview
+              lat={parsedLat}
+              lng={parsedLng}
+              title={form.nama || "Pratinjau"}
+            />
             {hasCoords && (
               <p className="font-body text-xs text-foreground/50">
                 📍 {parsedLat.toFixed(4)}, {parsedLng.toFixed(4)}
@@ -543,16 +541,22 @@ export default function AdminLokasi() {
               >
                 {/* Map thumbnail */}
                 <div
-                  className="flex-shrink-0 w-full sm:w-32 rounded-lg overflow-hidden border border-border"
+                  className="flex-shrink-0 w-full sm:w-32"
                   style={{ height: "80px" }}
                 >
-                  <iframe
-                    title={`Peta ${loc.nama}`}
-                    src={`https://www.openstreetmap.org/export/embed.html?bbox=${loc.longitude - 0.02},${loc.latitude - 0.02},${loc.longitude + 0.02},${loc.latitude + 0.02}&layer=mapnik&marker=${loc.latitude},${loc.longitude}`}
-                    width="100%"
-                    height="100%"
-                    style={{ border: "none", pointerEvents: "none" }}
-                    loading="lazy"
+                  <LeafletMap
+                    markers={[
+                      {
+                        id: loc.id,
+                        lat: loc.latitude,
+                        lng: loc.longitude,
+                        title: loc.nama,
+                      },
+                    ]}
+                    height={80}
+                    fitBounds={false}
+                    zoom={13}
+                    className="pointer-events-none"
                   />
                 </div>
 
