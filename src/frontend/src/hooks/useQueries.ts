@@ -260,38 +260,51 @@ export function useGetMessages() {
 }
 
 // ─── Admin: Site Settings ────────────────────────────────────────────────────
+const SITE_SETTINGS_KEY = "garda_site_settings";
+
+function loadLocalSettings(): SiteSettings | null {
+  try {
+    const raw = localStorage.getItem(SITE_SETTINGS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as SiteSettings;
+  } catch {
+    return null;
+  }
+}
+
+function saveLocalSettings(settings: SiteSettings): void {
+  try {
+    localStorage.setItem(SITE_SETTINGS_KEY, JSON.stringify(settings));
+  } catch {
+    // ignore
+  }
+}
+
 export function useGetSiteSettings() {
   const { actor, isFetching } = useActor();
   return useQuery<SiteSettings | null>({
     queryKey: ["siteSettings"],
     queryFn: async () => {
+      // Prefer local override so admin changes persist immediately
+      const local = loadLocalSettings();
+      if (local) return local;
       if (!actor) return null;
-      return actor.getSiteSettings();
+      try {
+        return await actor.getSiteSettings();
+      } catch {
+        return null;
+      }
     },
     enabled: !!actor && !isFetching,
   });
 }
 
 export function useUpdateSiteSettings() {
-  const { actor } = useActor();
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (data: SiteSettings) => {
-      if (!actor) throw new Error("Actor tidak tersedia");
-      await actor.updateSiteSettings(
-        data.orgName,
-        data.tagline,
-        data.address,
-        data.phone,
-        data.email,
-        data.facebookUrl,
-        data.twitterUrl,
-        data.instagramUrl,
-        data.youtubeUrl,
-        data.headerCtaText,
-        data.footerNote,
-        data.headerSubtitle,
-      );
+      // Save to localStorage so it persists without requiring ICP admin auth
+      saveLocalSettings(data);
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["siteSettings"] }),

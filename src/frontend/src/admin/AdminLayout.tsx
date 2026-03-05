@@ -98,7 +98,7 @@ function Sidebar({
         style={{ borderBottom: "1px solid oklch(0.22 0.04 25)" }}
       >
         <img
-          src="/assets/generated/garda-logo-transparent.dim_400x400.png"
+          src="/assets/uploads/55406_original_FB_IMG_1553487322630-removebg-preview-1.png"
           alt="GARDA"
           className="w-8 h-8 object-contain flex-shrink-0"
         />
