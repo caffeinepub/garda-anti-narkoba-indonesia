@@ -89,11 +89,17 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface Message {
-    name: string;
-    email: string;
-    message: string;
-    timestamp: bigint;
+export interface Location {
+    id: string;
+    latitude: number;
+    provinsi: string;
+    alamat: string;
+    kota: string;
+    nama: string;
+    tanggalKegiatan: string;
+    longitude: number;
+    keterangan: string;
+    jumlahPeserta: bigint;
 }
 export interface SiteSettings {
     orgName: string;
@@ -109,12 +115,36 @@ export interface SiteSettings {
     facebookUrl: string;
     footerNote: string;
 }
+export interface Program {
+    kind: string;
+    name: string;
+    description: string;
+}
+export interface Message {
+    name: string;
+    email: string;
+    message: string;
+    timestamp: bigint;
+}
 export interface Volunteer {
     status: string;
     city: string;
     name: string;
     email: string;
     motivation: string;
+    phone: string;
+}
+export interface GalleryItem {
+    id: string;
+    url: string;
+    tanggal: bigint;
+    tipe: string;
+    judul: string;
+    deskripsi: string;
+}
+export interface UserProfile {
+    name: string;
+    email: string;
     phone: string;
 }
 export interface Article {
@@ -124,11 +154,6 @@ export interface Article {
     author: string;
     category: string;
 }
-export interface Program {
-    kind: string;
-    name: string;
-    description: string;
-}
 export enum UserRole {
     admin = "admin",
     user = "user",
@@ -137,31 +162,40 @@ export enum UserRole {
 export interface backendInterface {
     _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     addArticle(title: string, content: string, author: string, date: bigint, category: string): Promise<void>;
+    addGalleryItem(item: GalleryItem): Promise<void>;
+    addLocation(location: Location): Promise<void>;
     addProgram(name: string, description: string, kind: string): Promise<void>;
     approveVolunteer(email: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     deleteArticle(title: string): Promise<void>;
+    deleteGalleryItem(id: string): Promise<void>;
+    deleteLocation(id: string): Promise<void>;
     deleteProgram(name: string): Promise<void>;
     deleteVolunteer(email: string): Promise<void>;
     getArticles(): Promise<Array<Article>>;
     getArticlesByCategory(category: string): Promise<Array<Article>>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getGalleryItems(): Promise<Array<GalleryItem>>;
+    getLocations(): Promise<Array<Location>>;
     getMessages(): Promise<Array<Message>>;
     getPrograms(): Promise<Array<Program>>;
     getProgramsByKind(kind: string): Promise<Array<Program>>;
     getSiteSettings(): Promise<SiteSettings>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
     getVolunteers(): Promise<Array<Volunteer>>;
     getVolunteersByStatus(status: string): Promise<Array<Volunteer>>;
     isAdmin(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     registerVolunteer(name: string, email: string, phone: string, city: string, motivation: string): Promise<void>;
     rejectVolunteer(email: string): Promise<void>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
     sendMessage(name: string, email: string, message: string, timestamp: bigint): Promise<void>;
     updateArticle(title: string, newTitle: string, content: string, author: string, category: string): Promise<void>;
     updateProgram(name: string, newName: string, description: string, kind: string): Promise<void>;
     updateSiteSettings(orgName: string, tagline: string, address: string, phone: string, email: string, facebookUrl: string, twitterUrl: string, instagramUrl: string, youtubeUrl: string, headerCtaText: string, footerNote: string, headerSubtitle: string): Promise<void>;
 }
-import type { UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -189,6 +223,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.addArticle(arg0, arg1, arg2, arg3, arg4);
+            return result;
+        }
+    }
+    async addGalleryItem(arg0: GalleryItem): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addGalleryItem(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addGalleryItem(arg0);
+            return result;
+        }
+    }
+    async addLocation(arg0: Location): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.addLocation(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.addLocation(arg0);
             return result;
         }
     }
@@ -248,6 +310,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async deleteGalleryItem(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteGalleryItem(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteGalleryItem(arg0);
+            return result;
+        }
+    }
+    async deleteLocation(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteLocation(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteLocation(arg0);
+            return result;
+        }
+    }
     async deleteProgram(arg0: string): Promise<void> {
         if (this.processError) {
             try {
@@ -304,18 +394,60 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getCallerUserProfile(): Promise<UserProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getCallerUserProfile();
+                return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getCallerUserProfile();
+            return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+        }
+    }
     async getCallerUserRole(): Promise<UserRole> {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserRole();
-                return from_candid_UserRole_n3(this._uploadFile, this._downloadFile, result);
+                return from_candid_UserRole_n4(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserRole();
-            return from_candid_UserRole_n3(this._uploadFile, this._downloadFile, result);
+            return from_candid_UserRole_n4(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getGalleryItems(): Promise<Array<GalleryItem>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getGalleryItems();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getGalleryItems();
+            return result;
+        }
+    }
+    async getLocations(): Promise<Array<Location>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getLocations();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getLocations();
+            return result;
         }
     }
     async getMessages(): Promise<Array<Message>> {
@@ -372,6 +504,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getSiteSettings();
             return result;
+        }
+    }
+    async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getUserProfile(arg0);
+                return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getUserProfile(arg0);
+            return from_candid_opt_n3(this._uploadFile, this._downloadFile, result);
         }
     }
     async getVolunteers(): Promise<Array<Volunteer>> {
@@ -458,6 +604,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.saveCallerUserProfile(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.saveCallerUserProfile(arg0);
+            return result;
+        }
+    }
     async sendMessage(arg0: string, arg1: string, arg2: string, arg3: bigint): Promise<void> {
         if (this.processError) {
             try {
@@ -515,10 +675,13 @@ export class Backend implements backendInterface {
         }
     }
 }
-function from_candid_UserRole_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
-    return from_candid_variant_n4(_uploadFile, _downloadFile, value);
+function from_candid_UserRole_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n5(_uploadFile, _downloadFile, value);
 }
-function from_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_opt_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
+    return value.length === 0 ? null : value[0];
+}
+function from_candid_variant_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     admin: null;
 } | {
     user: null;

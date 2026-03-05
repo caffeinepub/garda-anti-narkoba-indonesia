@@ -8,6 +8,26 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const GalleryItem = IDL.Record({
+  'id' : IDL.Text,
+  'url' : IDL.Text,
+  'tanggal' : IDL.Int,
+  'tipe' : IDL.Text,
+  'judul' : IDL.Text,
+  'deskripsi' : IDL.Text,
+});
+export const Location = IDL.Record({
+  'id' : IDL.Text,
+  'latitude' : IDL.Float64,
+  'provinsi' : IDL.Text,
+  'alamat' : IDL.Text,
+  'kota' : IDL.Text,
+  'nama' : IDL.Text,
+  'tanggalKegiatan' : IDL.Text,
+  'longitude' : IDL.Float64,
+  'keterangan' : IDL.Text,
+  'jumlahPeserta' : IDL.Int,
+});
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
@@ -19,6 +39,11 @@ export const Article = IDL.Record({
   'date' : IDL.Int,
   'author' : IDL.Text,
   'category' : IDL.Text,
+});
+export const UserProfile = IDL.Record({
+  'name' : IDL.Text,
+  'email' : IDL.Text,
+  'phone' : IDL.Text,
 });
 export const Message = IDL.Record({
   'name' : IDL.Text,
@@ -61,19 +86,31 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'addGalleryItem' : IDL.Func([GalleryItem], [], []),
+  'addLocation' : IDL.Func([Location], [], []),
   'addProgram' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
   'approveVolunteer' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'deleteArticle' : IDL.Func([IDL.Text], [], []),
+  'deleteGalleryItem' : IDL.Func([IDL.Text], [], []),
+  'deleteLocation' : IDL.Func([IDL.Text], [], []),
   'deleteProgram' : IDL.Func([IDL.Text], [], []),
   'deleteVolunteer' : IDL.Func([IDL.Text], [], []),
   'getArticles' : IDL.Func([], [IDL.Vec(Article)], ['query']),
   'getArticlesByCategory' : IDL.Func([IDL.Text], [IDL.Vec(Article)], ['query']),
+  'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getGalleryItems' : IDL.Func([], [IDL.Vec(GalleryItem)], ['query']),
+  'getLocations' : IDL.Func([], [IDL.Vec(Location)], ['query']),
   'getMessages' : IDL.Func([], [IDL.Vec(Message)], ['query']),
   'getPrograms' : IDL.Func([], [IDL.Vec(Program)], ['query']),
   'getProgramsByKind' : IDL.Func([IDL.Text], [IDL.Vec(Program)], ['query']),
   'getSiteSettings' : IDL.Func([], [SiteSettings], ['query']),
+  'getUserProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(UserProfile)],
+      ['query'],
+    ),
   'getVolunteers' : IDL.Func([], [IDL.Vec(Volunteer)], ['query']),
   'getVolunteersByStatus' : IDL.Func(
       [IDL.Text],
@@ -88,6 +125,7 @@ export const idlService = IDL.Service({
       [],
     ),
   'rejectVolunteer' : IDL.Func([IDL.Text], [], []),
+  'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'sendMessage' : IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Int], [], []),
   'updateArticle' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],
@@ -118,6 +156,26 @@ export const idlService = IDL.Service({
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+  const GalleryItem = IDL.Record({
+    'id' : IDL.Text,
+    'url' : IDL.Text,
+    'tanggal' : IDL.Int,
+    'tipe' : IDL.Text,
+    'judul' : IDL.Text,
+    'deskripsi' : IDL.Text,
+  });
+  const Location = IDL.Record({
+    'id' : IDL.Text,
+    'latitude' : IDL.Float64,
+    'provinsi' : IDL.Text,
+    'alamat' : IDL.Text,
+    'kota' : IDL.Text,
+    'nama' : IDL.Text,
+    'tanggalKegiatan' : IDL.Text,
+    'longitude' : IDL.Float64,
+    'keterangan' : IDL.Text,
+    'jumlahPeserta' : IDL.Int,
+  });
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
@@ -129,6 +187,11 @@ export const idlFactory = ({ IDL }) => {
     'date' : IDL.Int,
     'author' : IDL.Text,
     'category' : IDL.Text,
+  });
+  const UserProfile = IDL.Record({
+    'name' : IDL.Text,
+    'email' : IDL.Text,
+    'phone' : IDL.Text,
   });
   const Message = IDL.Record({
     'name' : IDL.Text,
@@ -171,10 +234,14 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'addGalleryItem' : IDL.Func([GalleryItem], [], []),
+    'addLocation' : IDL.Func([Location], [], []),
     'addProgram' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
     'approveVolunteer' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'deleteArticle' : IDL.Func([IDL.Text], [], []),
+    'deleteGalleryItem' : IDL.Func([IDL.Text], [], []),
+    'deleteLocation' : IDL.Func([IDL.Text], [], []),
     'deleteProgram' : IDL.Func([IDL.Text], [], []),
     'deleteVolunteer' : IDL.Func([IDL.Text], [], []),
     'getArticles' : IDL.Func([], [IDL.Vec(Article)], ['query']),
@@ -183,11 +250,19 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(Article)],
         ['query'],
       ),
+    'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getGalleryItems' : IDL.Func([], [IDL.Vec(GalleryItem)], ['query']),
+    'getLocations' : IDL.Func([], [IDL.Vec(Location)], ['query']),
     'getMessages' : IDL.Func([], [IDL.Vec(Message)], ['query']),
     'getPrograms' : IDL.Func([], [IDL.Vec(Program)], ['query']),
     'getProgramsByKind' : IDL.Func([IDL.Text], [IDL.Vec(Program)], ['query']),
     'getSiteSettings' : IDL.Func([], [SiteSettings], ['query']),
+    'getUserProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(UserProfile)],
+        ['query'],
+      ),
     'getVolunteers' : IDL.Func([], [IDL.Vec(Volunteer)], ['query']),
     'getVolunteersByStatus' : IDL.Func(
         [IDL.Text],
@@ -202,6 +277,7 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'rejectVolunteer' : IDL.Func([IDL.Text], [], []),
+    'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'sendMessage' : IDL.Func([IDL.Text, IDL.Text, IDL.Text, IDL.Int], [], []),
     'updateArticle' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Text, IDL.Text, IDL.Text],

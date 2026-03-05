@@ -1,17 +1,14 @@
 import Text "mo:core/Text";
-import Array "mo:core/Array";
-import List "mo:core/List";
-import Principal "mo:core/Principal";
-import Runtime "mo:core/Runtime";
 import Map "mo:core/Map";
-
+import List "mo:core/List";
+import Array "mo:core/Array";
+import Runtime "mo:core/Runtime";
+import Principal "mo:core/Principal";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
 
-// Migration to keep state stable after upgrade
-
 actor {
-  // Data Types
+  // Types
   type Message = {
     name : Text;
     email : Text;
@@ -57,10 +54,42 @@ actor {
     headerSubtitle : Text;
   };
 
+  type Location = {
+    id : Text;
+    nama : Text;
+    alamat : Text;
+    kota : Text;
+    provinsi : Text;
+    latitude : Float;
+    longitude : Float;
+    tanggalKegiatan : Text;
+    jumlahPeserta : Int;
+    keterangan : Text;
+  };
+
+  type GalleryItem = {
+    id : Text;
+    judul : Text;
+    deskripsi : Text;
+    tipe : Text; // "foto" or "video"
+    url : Text;
+    tanggal : Int;
+  };
+
+  type UserProfile = {
+    name : Text;
+    email : Text;
+    phone : Text;
+  };
+
+  // Persistence
   let messages = List.empty<Message>();
   let articles = List.empty<Article>();
   let programs = List.empty<Program>();
   let volunteers = Map.empty<Text, Volunteer>();
+  let locations = Map.empty<Text, Location>();
+  let galleryItems = Map.empty<Text, GalleryItem>();
+  let userProfiles = Map.empty<Principal, UserProfile>();
 
   var siteSettings : SiteSettings = {
     orgName = "GARDA Anti Narkoba Indonesia";
@@ -81,6 +110,28 @@ actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
+  // User Profile Management
+  public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view profiles");
+    };
+    userProfiles.get(caller);
+  };
+
+  public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
+    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Can only view your own profile");
+    };
+    userProfiles.get(user);
+  };
+
+  public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can save profiles");
+    };
+    userProfiles.add(caller, profile);
+  };
+
   // Messaging
   public shared ({ caller }) func sendMessage(name : Text, email : Text, message : Text, timestamp : Int) : async () {
     let newMessage : Message = {
@@ -93,6 +144,9 @@ actor {
   };
 
   public query ({ caller }) func getMessages() : async [Message] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin access required");
+    };
     messages.toArray();
   };
 
@@ -216,10 +270,16 @@ actor {
   };
 
   public query ({ caller }) func getVolunteers() : async [Volunteer] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin access required");
+    };
     volunteers.values().toArray();
   };
 
   public query ({ caller }) func getVolunteersByStatus(status : Text) : async [Volunteer] {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin access required");
+    };
     volunteers.values().toArray().filter(func(volunteer) { volunteer.status == status });
   };
 
@@ -299,5 +359,49 @@ actor {
 
   public query ({ caller }) func isAdmin() : async Bool {
     AccessControl.isAdmin(accessControlState, caller);
+  };
+
+  // Location Management
+  public shared ({ caller }) func addLocation(location : Location) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin access required");
+    };
+    locations.add(location.id, location);
+  };
+
+  public shared ({ caller }) func deleteLocation(id : Text) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin access required");
+    };
+    if (not locations.containsKey(id)) {
+      Runtime.trap("Location not found");
+    };
+    locations.remove(id);
+  };
+
+  public query ({ caller }) func getLocations() : async [Location] {
+    locations.values().toArray();
+  };
+
+  // Gallery Management
+  public shared ({ caller }) func addGalleryItem(item : GalleryItem) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin access required");
+    };
+    galleryItems.add(item.id, item);
+  };
+
+  public shared ({ caller }) func deleteGalleryItem(id : Text) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Admin access required");
+    };
+    if (not galleryItems.containsKey(id)) {
+      Runtime.trap("Gallery item not found");
+    };
+    galleryItems.remove(id);
+  };
+
+  public query ({ caller }) func getGalleryItems() : async [GalleryItem] {
+    galleryItems.values().toArray();
   };
 };

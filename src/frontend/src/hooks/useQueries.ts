@@ -1,6 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   Article,
+  GalleryItem,
+  Location,
   Message,
   Program,
   SiteSettings,
@@ -8,7 +10,15 @@ import type {
 } from "../backend.d.ts";
 import { useActor } from "./useActor";
 
-export type { Article, Message, Program, SiteSettings, Volunteer };
+export type {
+  Article,
+  GalleryItem,
+  Location,
+  Message,
+  Program,
+  SiteSettings,
+  Volunteer,
+};
 
 // ─── Programs ───────────────────────────────────────────────────────────────
 export function useGetPrograms() {
@@ -308,6 +318,112 @@ export function useUpdateSiteSettings() {
     },
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ["siteSettings"] }),
+  });
+}
+
+// ─── Locations (localStorage) ────────────────────────────────────────────────
+const LOCATIONS_KEY = "garda_locations";
+
+function loadLocalLocations(): Location[] {
+  try {
+    const raw = localStorage.getItem(LOCATIONS_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as Location[];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalLocations(locations: Location[]): void {
+  try {
+    localStorage.setItem(LOCATIONS_KEY, JSON.stringify(locations));
+  } catch {
+    // ignore
+  }
+}
+
+export function useGetLocations() {
+  return useQuery<Location[]>({
+    queryKey: ["locations"],
+    queryFn: async () => {
+      return loadLocalLocations();
+    },
+  });
+}
+
+export function useAddLocation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: Location) => {
+      const existing = loadLocalLocations();
+      saveLocalLocations([...existing, data]);
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["locations"] }),
+  });
+}
+
+export function useDeleteLocation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const existing = loadLocalLocations();
+      saveLocalLocations(existing.filter((l) => l.id !== id));
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["locations"] }),
+  });
+}
+
+// ─── Gallery (localStorage) ───────────────────────────────────────────────────
+const GALLERY_KEY = "garda_gallery_items";
+
+function loadLocalGallery(): GalleryItem[] {
+  try {
+    const raw = localStorage.getItem(GALLERY_KEY);
+    if (!raw) return [];
+    return JSON.parse(raw) as GalleryItem[];
+  } catch {
+    return [];
+  }
+}
+
+function saveLocalGallery(items: GalleryItem[]): void {
+  try {
+    localStorage.setItem(GALLERY_KEY, JSON.stringify(items));
+  } catch {
+    // ignore
+  }
+}
+
+export function useGetGalleryItems() {
+  return useQuery<GalleryItem[]>({
+    queryKey: ["galleryItems"],
+    queryFn: async () => {
+      return loadLocalGallery();
+    },
+  });
+}
+
+export function useAddGalleryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: GalleryItem) => {
+      const existing = loadLocalGallery();
+      saveLocalGallery([...existing, data]);
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["galleryItems"] }),
+  });
+}
+
+export function useDeleteGalleryItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const existing = loadLocalGallery();
+      saveLocalGallery(existing.filter((g) => g.id !== id));
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["galleryItems"] }),
   });
 }
 

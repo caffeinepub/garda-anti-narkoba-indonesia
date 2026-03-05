@@ -2,8 +2,10 @@ import { Toaster } from "@/components/ui/sonner";
 import { useState } from "react";
 import AdminArtikel from "./admin/AdminArtikel";
 import AdminDashboard from "./admin/AdminDashboard";
+import AdminGaleri from "./admin/AdminGaleri";
 import AdminLayout, { type AdminPage } from "./admin/AdminLayout";
 import AdminLogin from "./admin/AdminLogin";
+import AdminLokasi from "./admin/AdminLokasi";
 import AdminPengaturan from "./admin/AdminPengaturan";
 import AdminPesan from "./admin/AdminPesan";
 import AdminProgram from "./admin/AdminProgram";
@@ -15,6 +17,8 @@ const PAGE_TITLES: Record<AdminPage, string> = {
   relawan: "Manajemen Relawan",
   artikel: "Manajemen Artikel",
   program: "Manajemen Program",
+  lokasi: "Lokasi Penyuluhan",
+  galeri: "Galeri Foto & Video",
   pesan: "Pesan Masuk",
   pengaturan: "Pengaturan Website",
 };
@@ -46,6 +50,10 @@ function AdminContent() {
         return <AdminArtikel />;
       case "program":
         return <AdminProgram />;
+      case "lokasi":
+        return <AdminLokasi />;
+      case "galeri":
+        return <AdminGaleri />;
       case "pesan":
         return <AdminPesan />;
       case "pengaturan":

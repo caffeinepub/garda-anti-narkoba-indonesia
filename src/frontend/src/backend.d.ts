@@ -7,11 +7,17 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
-export interface Message {
-    name: string;
-    email: string;
-    message: string;
-    timestamp: bigint;
+export interface Location {
+    id: string;
+    latitude: number;
+    provinsi: string;
+    alamat: string;
+    kota: string;
+    nama: string;
+    tanggalKegiatan: string;
+    longitude: number;
+    keterangan: string;
+    jumlahPeserta: bigint;
 }
 export interface SiteSettings {
     orgName: string;
@@ -27,12 +33,36 @@ export interface SiteSettings {
     facebookUrl: string;
     footerNote: string;
 }
+export interface Program {
+    kind: string;
+    name: string;
+    description: string;
+}
+export interface Message {
+    name: string;
+    email: string;
+    message: string;
+    timestamp: bigint;
+}
 export interface Volunteer {
     status: string;
     city: string;
     name: string;
     email: string;
     motivation: string;
+    phone: string;
+}
+export interface GalleryItem {
+    id: string;
+    url: string;
+    tanggal: bigint;
+    tipe: string;
+    judul: string;
+    deskripsi: string;
+}
+export interface UserProfile {
+    name: string;
+    email: string;
     phone: string;
 }
 export interface Article {
@@ -42,11 +72,6 @@ export interface Article {
     author: string;
     category: string;
 }
-export interface Program {
-    kind: string;
-    name: string;
-    description: string;
-}
 export enum UserRole {
     admin = "admin",
     user = "user",
@@ -54,25 +79,34 @@ export enum UserRole {
 }
 export interface backendInterface {
     addArticle(title: string, content: string, author: string, date: bigint, category: string): Promise<void>;
+    addGalleryItem(item: GalleryItem): Promise<void>;
+    addLocation(location: Location): Promise<void>;
     addProgram(name: string, description: string, kind: string): Promise<void>;
     approveVolunteer(email: string): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     deleteArticle(title: string): Promise<void>;
+    deleteGalleryItem(id: string): Promise<void>;
+    deleteLocation(id: string): Promise<void>;
     deleteProgram(name: string): Promise<void>;
     deleteVolunteer(email: string): Promise<void>;
     getArticles(): Promise<Array<Article>>;
     getArticlesByCategory(category: string): Promise<Array<Article>>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
+    getGalleryItems(): Promise<Array<GalleryItem>>;
+    getLocations(): Promise<Array<Location>>;
     getMessages(): Promise<Array<Message>>;
     getPrograms(): Promise<Array<Program>>;
     getProgramsByKind(kind: string): Promise<Array<Program>>;
     getSiteSettings(): Promise<SiteSettings>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
     getVolunteers(): Promise<Array<Volunteer>>;
     getVolunteersByStatus(status: string): Promise<Array<Volunteer>>;
     isAdmin(): Promise<boolean>;
     isCallerAdmin(): Promise<boolean>;
     registerVolunteer(name: string, email: string, phone: string, city: string, motivation: string): Promise<void>;
     rejectVolunteer(email: string): Promise<void>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
     sendMessage(name: string, email: string, message: string, timestamp: bigint): Promise<void>;
     updateArticle(title: string, newTitle: string, content: string, author: string, category: string): Promise<void>;
     updateProgram(name: string, newName: string, description: string, kind: string): Promise<void>;

@@ -12,13 +12,16 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   AlertCircle,
   BookOpen,
+  Calendar,
   CheckCircle,
   ChevronRight,
   Eye,
   Facebook,
+  Film,
   GraduationCap,
   HandHeart,
   Heart,
+  ImageIcon,
   Instagram,
   Loader2,
   Mail,
@@ -26,6 +29,7 @@ import {
   Megaphone,
   Menu,
   Phone,
+  Play,
   Scale,
   Shield,
   Star,
@@ -43,12 +47,14 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   useGetArticles,
+  useGetGalleryItems,
+  useGetLocations,
   useGetPrograms,
   useGetSiteSettings,
   useRegisterVolunteer,
   useSendMessage,
 } from "./hooks/useQueries";
-import type { Article, Program } from "./hooks/useQueries";
+import type { Article, GalleryItem, Program } from "./hooks/useQueries";
 
 // ─── Sample Data ─────────────────────────────────────────────────────────────
 
@@ -215,7 +221,9 @@ function Navbar() {
     { id: "beranda", label: "Beranda", ocid: "nav.beranda_link" },
     { id: "tentang", label: "Tentang", ocid: "nav.tentang_link" },
     { id: "program", label: "Program", ocid: "nav.program_link" },
+    { id: "peta", label: "Peta", ocid: "nav.peta_link" },
     { id: "berita", label: "Berita", ocid: "nav.berita_link" },
+    { id: "galeri", label: "Galeri", ocid: "nav.galeri_link" },
     { id: "bergabung", label: "Bergabung", ocid: "nav.bergabung_link" },
     { id: "kontak", label: "Kontak", ocid: "nav.kontak_link" },
   ];
@@ -972,6 +980,447 @@ function BeritaSection() {
   );
 }
 
+// ─── Peta Section ────────────────────────────────────────────────────────────
+
+function PetaSection() {
+  const { data: locations, isLoading } = useGetLocations();
+  const hasLocations = locations && locations.length > 0;
+
+  // Build map bbox — use first location or full Indonesia
+  const mapSrc = hasLocations
+    ? `https://www.openstreetmap.org/export/embed.html?bbox=${locations[0].longitude - 0.05},${locations[0].latitude - 0.05},${locations[0].longitude + 0.05},${locations[0].latitude + 0.05}&layer=mapnik&marker=${locations[0].latitude},${locations[0].longitude}`
+    : "https://www.openstreetmap.org/export/embed.html?bbox=94,-11,141,6&layer=mapnik";
+
+  const formatTanggal = (tanggal: string) => {
+    if (!tanggal) return "-";
+    const d = new Date(tanggal);
+    return d.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  const locationOcids = [
+    "peta.item.1",
+    "peta.item.2",
+    "peta.item.3",
+    "peta.item.4",
+    "peta.item.5",
+    "peta.item.6",
+  ];
+
+  return (
+    <section id="peta" className="py-20 lg:py-28 bg-white">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <div className="inline-flex items-center gap-2 mb-4 text-garda-blue font-body font-semibold text-sm tracking-widest uppercase">
+            <div className="w-8 h-0.5 bg-garda-blue" />
+            Sebaran Wilayah
+            <div className="w-8 h-0.5 bg-garda-blue" />
+          </div>
+          <h2 className="font-display font-black text-4xl lg:text-5xl text-foreground">
+            Sebaran Lokasi Penyuluhan
+          </h2>
+          <p className="font-body text-foreground/60 text-lg mt-4 max-w-2xl mx-auto">
+            Peta interaktif lokasi kegiatan sosialisasi dan penyuluhan anti
+            narkoba yang telah dilaksanakan di seluruh Indonesia.
+          </p>
+        </motion.div>
+
+        {/* Map */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.98 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="w-full rounded-2xl overflow-hidden border border-border shadow-card mb-10"
+          style={{ height: "400px" }}
+        >
+          {isLoading ? (
+            <div
+              data-ocid="peta.loading_state"
+              className="w-full h-full flex items-center justify-center"
+              style={{ background: "oklch(0.96 0.01 230)" }}
+            >
+              <div className="text-center">
+                <Loader2 className="w-8 h-8 animate-spin text-garda-blue mx-auto mb-2" />
+                <p className="font-body text-sm text-foreground/50">
+                  Memuat peta...
+                </p>
+              </div>
+            </div>
+          ) : (
+            <iframe
+              title="Peta Sebaran Lokasi Penyuluhan"
+              src={mapSrc}
+              width="100%"
+              height="100%"
+              style={{ border: "none" }}
+              loading="lazy"
+            />
+          )}
+        </motion.div>
+
+        {/* Location Cards */}
+        {isLoading ? null : !hasLocations ? (
+          <div
+            data-ocid="peta.empty_state"
+            className="text-center py-10 px-6 rounded-2xl border border-dashed border-border bg-secondary/20"
+          >
+            <MapPin className="w-10 h-10 text-foreground/25 mx-auto mb-3" />
+            <p className="font-display font-bold text-foreground/50 text-lg mb-1">
+              Belum ada data lokasi penyuluhan
+            </p>
+            <p className="font-body text-sm text-foreground/40">
+              Data lokasi yang diinput admin akan ditampilkan di sini.
+            </p>
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {locations.slice(0, 6).map((loc, idx) => (
+              <motion.div
+                key={loc.id}
+                data-ocid={locationOcids[idx] ?? `peta.item.${idx + 1}`}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.07 }}
+                className="bg-white rounded-xl border border-border p-5 hover:shadow-card-hover transition-all duration-200"
+              >
+                <div className="flex items-start gap-3 mb-3">
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{ background: "oklch(0.42 0.20 230 / 0.08)" }}
+                  >
+                    <MapPin
+                      className="w-4 h-4"
+                      style={{ color: "oklch(0.42 0.20 230)" }}
+                    />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-display font-bold text-sm text-foreground leading-tight line-clamp-2">
+                      {loc.nama}
+                    </h3>
+                    <p className="font-body text-xs text-foreground/50 mt-0.5">
+                      {loc.kota}, {loc.provinsi}
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5 font-body text-xs text-foreground/55">
+                    <Calendar className="w-3 h-3 flex-shrink-0" />
+                    {formatTanggal(loc.tanggalKegiatan)}
+                  </div>
+                  <div className="flex items-center gap-1.5 font-body text-xs text-foreground/55">
+                    <Users className="w-3 h-3 flex-shrink-0" />
+                    {Number(loc.jumlahPeserta).toLocaleString("id-ID")} peserta
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ─── Galeri Section ───────────────────────────────────────────────────────────
+
+const SAMPLE_GALLERY: GalleryItem[] = [
+  {
+    id: "sample-1",
+    judul: "Sosialisasi Anti Narkoba di SMA Negeri 3 Jakarta",
+    deskripsi: "Kegiatan penyuluhan yang melibatkan 300 siswa dan guru.",
+    tipe: "foto",
+    url: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&q=80",
+    tanggal: BigInt(Date.now() - 7 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: "sample-2",
+    judul: "Pelatihan Kader Anti Narkoba Surabaya",
+    deskripsi: "50 kader baru dari Jawa Timur berhasil dilatih.",
+    tipe: "foto",
+    url: "https://images.unsplash.com/photo-1591115765373-5207764f72e7?w=800&q=80",
+    tanggal: BigInt(Date.now() - 14 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: "sample-3",
+    judul: "Video Kampanye Anti Narkoba Nasional",
+    deskripsi: "Kampanye video resmi GARDA untuk kesadaran masyarakat.",
+    tipe: "video",
+    url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    tanggal: BigInt(Date.now() - 30 * 24 * 60 * 60 * 1000),
+  },
+];
+
+type GaleriFilter = "semua" | "foto" | "video";
+
+function getYoutubeEmbedUrl(url: string): string | null {
+  if (!url) return null;
+  const shortMatch = url.match(/youtu\.be\/([^?&]+)/);
+  if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`;
+  const longMatch = url.match(/[?&]v=([^?&]+)/);
+  if (longMatch) return `https://www.youtube.com/embed/${longMatch[1]}`;
+  const embedMatch = url.match(/\/embed\/([^?&]+)/);
+  if (embedMatch) return `https://www.youtube.com/embed/${embedMatch[1]}`;
+  return null;
+}
+
+function GaleriSection() {
+  const { data: galleryItems, isLoading } = useGetGalleryItems();
+  const [filter, setFilter] = useState<GaleriFilter>("semua");
+  const [lightboxItem, setLightboxItem] = useState<GalleryItem | null>(null);
+
+  const displayItems =
+    galleryItems && galleryItems.length > 0 ? galleryItems : SAMPLE_GALLERY;
+
+  const filteredItems = displayItems.filter((item) => {
+    if (filter === "semua") return true;
+    return item.tipe === filter;
+  });
+
+  const formatTanggal = (ts: bigint) =>
+    new Date(Number(ts)).toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+
+  const galeriOcids = [
+    "galeri.item.1",
+    "galeri.item.2",
+    "galeri.item.3",
+    "galeri.item.4",
+    "galeri.item.5",
+    "galeri.item.6",
+  ];
+
+  return (
+    <section id="galeri" className="py-20 lg:py-28 bg-secondary/20">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-10"
+        >
+          <div className="inline-flex items-center gap-2 mb-4 text-garda-red font-body font-semibold text-sm tracking-widest uppercase">
+            <div className="w-8 h-0.5 bg-garda-red" />
+            Dokumentasi
+            <div className="w-8 h-0.5 bg-garda-red" />
+          </div>
+          <h2 className="font-display font-black text-4xl lg:text-5xl text-foreground">
+            Galeri Foto & Video
+          </h2>
+          <p className="font-body text-foreground/60 text-lg mt-4 max-w-2xl mx-auto">
+            Dokumentasi kegiatan sosialisasi, pelatihan, dan kampanye anti
+            narkoba di seluruh Indonesia.
+          </p>
+        </motion.div>
+
+        {/* Filter Tabs */}
+        <div className="flex justify-center mb-8">
+          <div className="inline-flex gap-2 bg-white rounded-full border border-border p-1 shadow-sm">
+            {(["semua", "foto", "video"] as GaleriFilter[]).map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                data-ocid="galeri.tab"
+                onClick={() => setFilter(tab)}
+                className={`px-5 py-2 rounded-full font-body text-sm font-medium transition-all duration-200 capitalize ${
+                  filter === tab
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-foreground/60 hover:text-foreground hover:bg-secondary/50"
+                }`}
+              >
+                {tab === "semua" ? "Semua" : tab === "foto" ? "Foto" : "Video"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div
+            data-ocid="galeri.loading_state"
+            className="flex justify-center py-20"
+          >
+            <Loader2 className="w-8 h-8 animate-spin text-garda-red" />
+          </div>
+        ) : filteredItems.length === 0 ? (
+          <div
+            data-ocid="galeri.empty_state"
+            className="text-center py-16 px-6 rounded-2xl border border-dashed border-border bg-white"
+          >
+            <ImageIcon className="w-10 h-10 text-foreground/25 mx-auto mb-3" />
+            <p className="font-display font-bold text-foreground/50 text-lg mb-1">
+              Belum ada konten galeri
+            </p>
+            <p className="font-body text-sm text-foreground/40">
+              Konten galeri yang diupload admin akan ditampilkan di sini.
+            </p>
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredItems.slice(0, 6).map((item, idx) => {
+              const embedUrl =
+                item.tipe === "video" ? getYoutubeEmbedUrl(item.url) : null;
+
+              return (
+                <motion.div
+                  key={item.id}
+                  data-ocid={galeriOcids[idx] ?? `galeri.item.${idx + 1}`}
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: idx * 0.07 }}
+                  className="bg-white rounded-xl border border-border overflow-hidden hover:shadow-card-hover transition-all duration-200 group"
+                >
+                  {/* Media */}
+                  <div
+                    className="relative overflow-hidden"
+                    style={{ aspectRatio: "16/9" }}
+                  >
+                    {item.tipe === "foto" ? (
+                      <button
+                        type="button"
+                        className="absolute inset-0 w-full h-full overflow-hidden"
+                        onClick={() => setLightboxItem(item)}
+                        aria-label={`Lihat foto: ${item.judul}`}
+                      >
+                        <img
+                          src={item.url}
+                          alt={item.judul}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src =
+                              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='225' viewBox='0 0 400 225'%3E%3Crect width='400' height='225' fill='%23f0f4f8'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23a0aec0' font-family='sans-serif' font-size='14'%3EGambar tidak tersedia%3C/text%3E%3C/svg%3E";
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors flex items-center justify-center">
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity w-10 h-10 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
+                            <ImageIcon className="w-5 h-5 text-foreground" />
+                          </div>
+                        </div>
+                      </button>
+                    ) : embedUrl ? (
+                      <iframe
+                        src={`${embedUrl}?autoplay=0`}
+                        title={item.judul}
+                        width="100%"
+                        height="100%"
+                        style={{ border: "none" }}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-secondary/40 flex flex-col items-center justify-center gap-2">
+                        <div className="w-12 h-12 rounded-full bg-foreground/10 flex items-center justify-center">
+                          <Play className="w-6 h-6 text-foreground/40 ml-0.5" />
+                        </div>
+                        <p className="font-body text-xs text-foreground/40">
+                          Video tidak tersedia
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Tipe badge */}
+                    <div className="absolute top-2 left-2">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-body font-semibold shadow-sm ${
+                          item.tipe === "foto"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {item.tipe === "foto" ? (
+                          <ImageIcon className="w-2.5 h-2.5" />
+                        ) : (
+                          <Film className="w-2.5 h-2.5" />
+                        )}
+                        {item.tipe === "foto" ? "Foto" : "Video"}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Info */}
+                  <div className="p-4">
+                    <h3 className="font-display font-bold text-sm text-foreground line-clamp-2 leading-snug mb-1">
+                      {item.judul}
+                    </h3>
+                    {item.deskripsi && (
+                      <p className="font-body text-xs text-foreground/55 line-clamp-2 mb-2">
+                        {item.deskripsi}
+                      </p>
+                    )}
+                    <p className="font-body text-xs text-foreground/35">
+                      {formatTanggal(item.tanggal)}
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Lightbox */}
+      <Dialog
+        open={lightboxItem !== null}
+        onOpenChange={(open) => {
+          if (!open) setLightboxItem(null);
+        }}
+      >
+        <DialogContent
+          data-ocid="galeri.dialog"
+          className="max-w-3xl p-2 bg-black border-none"
+        >
+          <DialogHeader className="sr-only">
+            <DialogTitle>{lightboxItem?.judul ?? "Foto"}</DialogTitle>
+          </DialogHeader>
+          {lightboxItem && (
+            <div className="relative">
+              <img
+                src={lightboxItem.url}
+                alt={lightboxItem.judul}
+                className="w-full rounded-lg max-h-[80vh] object-contain"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='225' viewBox='0 0 400 225'%3E%3Crect width='400' height='225' fill='%23111'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%23666' font-family='sans-serif' font-size='14'%3EGambar tidak tersedia%3C/text%3E%3C/svg%3E";
+                }}
+              />
+              <button
+                type="button"
+                data-ocid="galeri.dialog.close_button"
+                onClick={() => setLightboxItem(null)}
+                className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 rounded-b-lg">
+                <p className="font-display font-bold text-white text-sm">
+                  {lightboxItem.judul}
+                </p>
+                {lightboxItem.deskripsi && (
+                  <p className="font-body text-white/70 text-xs mt-0.5">
+                    {lightboxItem.deskripsi}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </section>
+  );
+}
+
 // ─── Bergabung Section ────────────────────────────────────────────────────────
 
 function BergabungSection() {
@@ -1647,8 +2096,10 @@ export default function App() {
         <HeroSection />
         <TentangSection />
         <StatistikSection />
+        <PetaSection />
         <ProgramSection />
         <BeritaSection />
+        <GaleriSection />
         <BergabungSection />
         <KontakSection />
       </main>

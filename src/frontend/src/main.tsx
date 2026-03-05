@@ -17,6 +17,8 @@ declare global {
 
 const queryClient = new QueryClient();
 
+// Determine which app to render based on the URL path.
+// This check runs once at startup and is the single source of truth.
 const isAdminRoute = window.location.pathname.startsWith("/admin");
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

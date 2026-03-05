@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button";
 import {
   FileText,
+  Image,
   LayoutDashboard,
   LogOut,
   Mail,
+  MapPin,
   Menu,
   Settings,
   Shield,
@@ -18,6 +20,8 @@ export type AdminPage =
   | "relawan"
   | "artikel"
   | "program"
+  | "lokasi"
+  | "galeri"
   | "pesan"
   | "pengaturan";
 
@@ -58,6 +62,18 @@ const navItems: {
     label: "Program",
     icon: <Shield className="w-4 h-4" />,
     ocid: "admin.sidebar.program_link",
+  },
+  {
+    id: "lokasi",
+    label: "Lokasi Penyuluhan",
+    icon: <MapPin className="w-4 h-4" />,
+    ocid: "admin.sidebar.lokasi_link",
+  },
+  {
+    id: "galeri",
+    label: "Galeri",
+    icon: <Image className="w-4 h-4" />,
+    ocid: "admin.sidebar.galeri_link",
   },
   {
     id: "pesan",

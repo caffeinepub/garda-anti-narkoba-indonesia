@@ -17,6 +17,26 @@ export interface Article {
   'author' : string,
   'category' : string,
 }
+export interface GalleryItem {
+  'id' : string,
+  'url' : string,
+  'tanggal' : bigint,
+  'tipe' : string,
+  'judul' : string,
+  'deskripsi' : string,
+}
+export interface Location {
+  'id' : string,
+  'latitude' : number,
+  'provinsi' : string,
+  'alamat' : string,
+  'kota' : string,
+  'nama' : string,
+  'tanggalKegiatan' : string,
+  'longitude' : number,
+  'keterangan' : string,
+  'jumlahPeserta' : bigint,
+}
 export interface Message {
   'name' : string,
   'email' : string,
@@ -42,6 +62,11 @@ export interface SiteSettings {
   'facebookUrl' : string,
   'footerNote' : string,
 }
+export interface UserProfile {
+  'name' : string,
+  'email' : string,
+  'phone' : string,
+}
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
@@ -59,19 +84,27 @@ export interface _SERVICE {
     [string, string, string, bigint, string],
     undefined
   >,
+  'addGalleryItem' : ActorMethod<[GalleryItem], undefined>,
+  'addLocation' : ActorMethod<[Location], undefined>,
   'addProgram' : ActorMethod<[string, string, string], undefined>,
   'approveVolunteer' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'deleteArticle' : ActorMethod<[string], undefined>,
+  'deleteGalleryItem' : ActorMethod<[string], undefined>,
+  'deleteLocation' : ActorMethod<[string], undefined>,
   'deleteProgram' : ActorMethod<[string], undefined>,
   'deleteVolunteer' : ActorMethod<[string], undefined>,
   'getArticles' : ActorMethod<[], Array<Article>>,
   'getArticlesByCategory' : ActorMethod<[string], Array<Article>>,
+  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getGalleryItems' : ActorMethod<[], Array<GalleryItem>>,
+  'getLocations' : ActorMethod<[], Array<Location>>,
   'getMessages' : ActorMethod<[], Array<Message>>,
   'getPrograms' : ActorMethod<[], Array<Program>>,
   'getProgramsByKind' : ActorMethod<[string], Array<Program>>,
   'getSiteSettings' : ActorMethod<[], SiteSettings>,
+  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'getVolunteers' : ActorMethod<[], Array<Volunteer>>,
   'getVolunteersByStatus' : ActorMethod<[string], Array<Volunteer>>,
   'isAdmin' : ActorMethod<[], boolean>,
@@ -81,6 +114,7 @@ export interface _SERVICE {
     undefined
   >,
   'rejectVolunteer' : ActorMethod<[string], undefined>,
+  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'sendMessage' : ActorMethod<[string, string, string, bigint], undefined>,
   'updateArticle' : ActorMethod<
     [string, string, string, string, string],
