@@ -274,6 +274,14 @@ function Navbar() {
             >
               {headerCtaText}
             </Button>
+            <a
+              href="/admin"
+              data-ocid="nav.admin_login.button"
+              className="hidden lg:inline-flex items-center gap-1.5 px-4 py-2 rounded-md border border-primary text-primary font-body font-semibold text-sm hover:bg-primary/5 transition-colors duration-200"
+            >
+              <Shield className="w-4 h-4" />
+              Login Admin
+            </a>
             <button
               type="button"
               data-ocid="nav.mobile_toggle"
@@ -320,6 +328,17 @@ function Navbar() {
                   >
                     {headerCtaText}
                   </Button>
+                </li>
+                <li className="pt-1 px-4">
+                  <a
+                    href="/admin"
+                    data-ocid="nav.admin_login.button"
+                    onClick={() => setMobileOpen(false)}
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 rounded-md border border-primary text-primary font-body font-semibold text-sm hover:bg-primary/5 transition-colors"
+                  >
+                    <Shield className="w-4 h-4" />
+                    Login Admin
+                  </a>
                 </li>
               </ul>
             </motion.div>
@@ -1013,6 +1032,7 @@ function BergabungSection() {
             <h2 className="font-display font-black text-4xl lg:text-5xl text-white mb-4">
               Jadilah Bagian dari Perubahan
             </h2>
+
             <p className="font-body text-white/75 text-lg">
               Bergabunglah sebagai relawan GARDA dan bersama-sama kita lindungi
               generasi bangsa dari bahaya narkoba.

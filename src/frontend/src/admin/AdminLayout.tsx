@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
 
 export type AdminPage =
   | "dashboard"
@@ -27,6 +26,7 @@ interface AdminLayoutProps {
   currentPage: AdminPage;
   onNavigate: (page: AdminPage) => void;
   pageTitle: string;
+  onLogout?: () => void;
 }
 
 const navItems: {
@@ -77,17 +77,13 @@ function Sidebar({
   currentPage,
   onNavigate,
   onClose,
+  onLogout,
 }: {
   currentPage: AdminPage;
   onNavigate: (page: AdminPage) => void;
   onClose?: () => void;
+  onLogout?: () => void;
 }) {
-  const { clear, identity } = useInternetIdentity();
-
-  const principalShort = identity
-    ? `${identity.getPrincipal().toString().slice(0, 10)}...`
-    : "";
-
   return (
     <aside
       className="flex flex-col h-full w-64"
@@ -180,40 +176,37 @@ function Sidebar({
         className="px-3 py-4"
         style={{ borderTop: "1px solid oklch(0.22 0.04 25)" }}
       >
-        {identity && (
+        <div
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl mb-2"
+          style={{ background: "oklch(0.20 0.04 25)" }}
+        >
           <div
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl mb-2"
-            style={{ background: "oklch(0.20 0.04 25)" }}
+            className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 font-display font-bold text-xs"
+            style={{
+              background: "oklch(0.47 0.22 25 / 0.3)",
+              color: "oklch(0.75 0.15 25)",
+            }}
           >
-            <div
-              className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 font-display font-bold text-xs"
-              style={{
-                background: "oklch(0.47 0.22 25 / 0.3)",
-                color: "oklch(0.75 0.15 25)",
-              }}
-            >
-              A
+            A
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-display font-bold text-xs text-white/80 truncate">
+              Administrator
             </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-display font-bold text-xs text-white/80 truncate">
-                Administrator
-              </div>
-              <div
-                className="font-body text-[10px] truncate"
-                style={{ color: "oklch(0.45 0.04 25)" }}
-              >
-                {principalShort}
-              </div>
+            <div
+              className="font-body text-[10px] truncate"
+              style={{ color: "oklch(0.45 0.04 25)" }}
+            >
+              admin
             </div>
           </div>
-        )}
+        </div>
 
         <button
           type="button"
           data-ocid="admin.sidebar.logout_button"
           onClick={() => {
-            clear();
-            window.location.hash = "";
+            onLogout?.();
           }}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 font-body text-sm font-medium"
           style={{ color: "oklch(0.55 0.04 25)" }}
@@ -243,6 +236,7 @@ export default function AdminLayout({
   currentPage,
   onNavigate,
   pageTitle,
+  onLogout,
 }: AdminLayoutProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -253,7 +247,11 @@ export default function AdminLayout({
     >
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex flex-shrink-0 h-screen sticky top-0">
-        <Sidebar currentPage={currentPage} onNavigate={onNavigate} />
+        <Sidebar
+          currentPage={currentPage}
+          onNavigate={onNavigate}
+          onLogout={onLogout}
+        />
       </div>
 
       {/* Mobile Sidebar Overlay */}
@@ -279,6 +277,7 @@ export default function AdminLayout({
                 currentPage={currentPage}
                 onNavigate={onNavigate}
                 onClose={() => setMobileOpen(false)}
+                onLogout={onLogout}
               />
             </motion.div>
           </>

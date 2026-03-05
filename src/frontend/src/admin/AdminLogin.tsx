@@ -1,15 +1,52 @@
 import { Button } from "@/components/ui/button";
-import { Loader2, Shield, ShieldAlert } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  Lock,
+  Shield,
+  ShieldAlert,
+  User,
+} from "lucide-react";
 import { motion } from "motion/react";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
+import { useState } from "react";
 
 interface AdminLoginProps {
   isNotAdmin?: boolean;
+  login?: (
+    username: string,
+    password: string,
+  ) => Promise<{ success: boolean; error?: string }>;
+  isLoading?: boolean;
+  hasCustomCredentials?: () => boolean;
 }
 
-export default function AdminLogin({ isNotAdmin }: AdminLoginProps) {
-  const { login, loginStatus, isInitializing, isLoginError } =
-    useInternetIdentity();
+export default function AdminLogin({
+  isNotAdmin,
+  login,
+  isLoading = false,
+  hasCustomCredentials,
+}: AdminLoginProps) {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    if (!username.trim() || !password) {
+      setError("Username dan password wajib diisi");
+      return;
+    }
+    if (!login) return;
+    const result = await login(username.trim(), password);
+    if (!result.success) {
+      setError(result.error ?? "Login gagal");
+    }
+  };
 
   return (
     <div
@@ -90,8 +127,7 @@ export default function AdminLogin({ isNotAdmin }: AdminLoginProps) {
                 className="font-body text-sm mb-6"
                 style={{ color: "oklch(0.55 0.04 25)" }}
               >
-                Akun Anda tidak memiliki hak akses admin. Hubungi administrator
-                untuk mendapatkan akses.
+                Sesi tidak valid atau sudah berakhir. Silakan login kembali.
               </p>
               <Button
                 variant="outline"
@@ -123,54 +159,142 @@ export default function AdminLogin({ isNotAdmin }: AdminLoginProps) {
                     className="font-body text-xs"
                     style={{ color: "oklch(0.55 0.04 25)" }}
                   >
-                    Gunakan Internet Identity
+                    Masukkan kredensial admin Anda
                   </p>
                 </div>
               </div>
 
-              <p
-                className="font-body text-sm mb-6 leading-relaxed"
-                style={{ color: "oklch(0.60 0.04 25)" }}
-              >
-                Panel admin menggunakan Internet Identity untuk keamanan
-                terdesentralisasi. Login untuk mengelola konten website.
-              </p>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="admin-username"
+                    className="font-body text-sm font-semibold"
+                    style={{ color: "oklch(0.80 0.03 25)" }}
+                  >
+                    Username
+                  </Label>
+                  <div className="relative">
+                    <User
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                      style={{ color: "oklch(0.55 0.04 25)" }}
+                    />
+                    <Input
+                      id="admin-username"
+                      data-ocid="admin.login.input"
+                      type="text"
+                      value={username}
+                      onChange={(e) => {
+                        setUsername(e.target.value);
+                        setError(null);
+                      }}
+                      placeholder="Masukkan username"
+                      autoComplete="username"
+                      className="pl-10 font-body"
+                      style={{
+                        background: "oklch(0.22 0.03 25)",
+                        border: "1px solid oklch(0.32 0.05 25)",
+                        color: "white",
+                      }}
+                    />
+                  </div>
+                </div>
 
-              <Button
-                data-ocid="admin.login.button"
-                onClick={() => login()}
-                disabled={
-                  loginStatus === "logging-in" ||
-                  loginStatus === "initializing" ||
-                  isInitializing
-                }
-                className="w-full font-display font-bold py-5 rounded-xl"
-                style={{
-                  background: "oklch(0.47 0.22 25)",
-                  color: "white",
-                }}
-              >
-                {loginStatus === "logging-in" ||
-                loginStatus === "initializing" ||
-                isInitializing ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Memverifikasi...
-                  </>
-                ) : (
-                  <>
-                    <Shield className="w-4 h-4 mr-2" />
-                    Login dengan Internet Identity
-                  </>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="admin-password"
+                    className="font-body text-sm font-semibold"
+                    style={{ color: "oklch(0.80 0.03 25)" }}
+                  >
+                    Password
+                  </Label>
+                  <div className="relative">
+                    <Lock
+                      className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                      style={{ color: "oklch(0.55 0.04 25)" }}
+                    />
+                    <Input
+                      id="admin-password"
+                      data-ocid="admin.login.input"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        setError(null);
+                      }}
+                      placeholder="Masukkan password"
+                      autoComplete="current-password"
+                      className="pl-10 pr-10 font-body"
+                      style={{
+                        background: "oklch(0.22 0.03 25)",
+                        border: "1px solid oklch(0.32 0.05 25)",
+                        color: "white",
+                      }}
+                    />
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 opacity-50 hover:opacity-80 transition-opacity"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4 text-white" />
+                      ) : (
+                        <Eye className="w-4 h-4 text-white" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                {error && (
+                  <motion.p
+                    data-ocid="admin.login.error_state"
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="font-body text-xs text-center py-2 px-3 rounded-lg"
+                    style={{
+                      background: "oklch(0.47 0.22 25 / 0.15)",
+                      color: "oklch(0.75 0.22 25)",
+                      border: "1px solid oklch(0.47 0.22 25 / 0.3)",
+                    }}
+                  >
+                    {error}
+                  </motion.p>
                 )}
-              </Button>
 
-              {isLoginError && (
-                <p
-                  className="text-center font-body text-xs mt-3"
-                  style={{ color: "oklch(0.65 0.22 25)" }}
+                <Button
+                  data-ocid="admin.login.submit_button"
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full font-display font-bold py-5 rounded-xl mt-2"
+                  style={{
+                    background: "oklch(0.47 0.22 25)",
+                    color: "white",
+                  }}
                 >
-                  Login gagal. Silakan coba lagi.
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Memverifikasi...
+                    </>
+                  ) : (
+                    <>
+                      <Shield className="w-4 h-4 mr-2" />
+                      Masuk
+                    </>
+                  )}
+                </Button>
+              </form>
+
+              {!hasCustomCredentials?.() && (
+                <p
+                  className="text-center font-body text-xs mt-4"
+                  style={{ color: "oklch(0.45 0.03 25)" }}
+                >
+                  Default:{" "}
+                  <span style={{ color: "oklch(0.58 0.04 25)" }}>admin</span> /{" "}
+                  <span style={{ color: "oklch(0.58 0.04 25)" }}>
+                    garda2024
+                  </span>
                 </p>
               )}
             </>

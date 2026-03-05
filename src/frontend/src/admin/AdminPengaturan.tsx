@@ -4,9 +4,10 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Save } from "lucide-react";
+import { Eye, EyeOff, KeyRound, Loader2, Save, User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useAdminAuth } from "../hooks/useAdminAuth";
 import type { SiteSettings } from "../hooks/useQueries";
 import { useGetSiteSettings, useUpdateSiteSettings } from "../hooks/useQueries";
 
@@ -53,14 +54,36 @@ function FieldGroup({
   );
 }
 
-export default function AdminPengaturan() {
+interface AdminPengaturanProps {
+  onLogout?: () => void;
+}
+
+export default function AdminPengaturan({ onLogout }: AdminPengaturanProps) {
   const { data: settings, isLoading } = useGetSiteSettings();
   const updateM = useUpdateSiteSettings();
+  const { changeCredentials, getStoredCredentials } = useAdminAuth();
   const [form, setForm] = useState<SiteSettings>(defaultSettings);
+
+  // Security form state
+  const [secNewUsername, setSecNewUsername] = useState("");
+  const [secOldPassword, setSecOldPassword] = useState("");
+  const [secNewPassword, setSecNewPassword] = useState("");
+  const [secConfirmPassword, setSecConfirmPassword] = useState("");
+  const [secError, setSecError] = useState<string | null>(null);
+  const [secSaving, setSecSaving] = useState(false);
+  const [showOldPwd, setShowOldPwd] = useState(false);
+  const [showNewPwd, setShowNewPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
 
   useEffect(() => {
     if (settings) setForm(settings);
   }, [settings]);
+
+  // Pre-fill username from stored credentials
+  useEffect(() => {
+    const stored = getStoredCredentials();
+    setSecNewUsername(stored ? stored.username : "admin");
+  }, [getStoredCredentials]);
 
   const handleSave = async (fields: Partial<SiteSettings>) => {
     try {
@@ -69,6 +92,53 @@ export default function AdminPengaturan() {
       toast.success("Pengaturan berhasil disimpan!");
     } catch {
       toast.error("Gagal menyimpan pengaturan. Silakan coba lagi.");
+    }
+  };
+
+  const handleSaveCredentials = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSecError(null);
+
+    if (!secNewUsername.trim()) {
+      setSecError("Username tidak boleh kosong");
+      return;
+    }
+    if (!secOldPassword) {
+      setSecError("Password lama wajib diisi");
+      return;
+    }
+    if (!secNewPassword) {
+      setSecError("Password baru wajib diisi");
+      return;
+    }
+    if (secNewPassword.length < 6) {
+      setSecError("Password baru minimal 6 karakter");
+      return;
+    }
+    if (secNewPassword !== secConfirmPassword) {
+      setSecError("Konfirmasi password tidak cocok");
+      return;
+    }
+
+    setSecSaving(true);
+    const result = await changeCredentials(
+      secOldPassword,
+      secNewUsername.trim(),
+      secNewPassword,
+    );
+    setSecSaving(false);
+
+    if (result.success) {
+      toast.success("Kredensial berhasil diperbarui! Silakan login ulang.");
+      setSecOldPassword("");
+      setSecNewPassword("");
+      setSecConfirmPassword("");
+      // Log out after credential change
+      setTimeout(() => {
+        onLogout?.();
+      }, 1500);
+    } else {
+      setSecError(result.error ?? "Gagal memperbarui kredensial");
     }
   };
 
@@ -89,7 +159,7 @@ export default function AdminPengaturan() {
     <div className="max-w-2xl">
       <Tabs defaultValue="profil">
         <TabsList
-          className="mb-6 h-auto p-1 gap-1"
+          className="mb-6 h-auto p-1 gap-1 flex-wrap"
           style={{ background: "oklch(0.93 0 0)" }}
         >
           <TabsTrigger
@@ -112,6 +182,13 @@ export default function AdminPengaturan() {
             className="font-body text-sm px-4 py-1.5 data-[state=active]:shadow-sm"
           >
             Footer & Sosmed
+          </TabsTrigger>
+          <TabsTrigger
+            value="keamanan"
+            data-ocid="admin.pengaturan.keamanan_tab"
+            className="font-body text-sm px-4 py-1.5 data-[state=active]:shadow-sm"
+          >
+            Keamanan
           </TabsTrigger>
         </TabsList>
 
@@ -436,6 +513,185 @@ export default function AdminPengaturan() {
               )}
               Simpan Footer & Sosmed
             </Button>
+          </div>
+        </TabsContent>
+
+        {/* ── Keamanan Tab ──────────────────────────────────────────── */}
+        <TabsContent value="keamanan">
+          <div
+            className="rounded-xl p-6 space-y-5"
+            style={{ background: "white", border: "1px solid oklch(0.92 0 0)" }}
+          >
+            <div>
+              <h3 className="font-display font-bold text-base text-foreground mb-1">
+                Keamanan Akun Admin
+              </h3>
+              <p
+                className="font-body text-xs"
+                style={{ color: "oklch(0.58 0 0)" }}
+              >
+                Ubah username dan password untuk login admin. Setelah disimpan,
+                Anda akan otomatis logout.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveCredentials} className="space-y-4">
+              {/* Username baru */}
+              <FieldGroup label="Username Baru">
+                <div className="relative">
+                  <User
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                    style={{ color: "oklch(0.60 0 0)" }}
+                  />
+                  <Input
+                    data-ocid="admin.keamanan.username_input"
+                    type="text"
+                    value={secNewUsername}
+                    onChange={(e) => {
+                      setSecNewUsername(e.target.value);
+                      setSecError(null);
+                    }}
+                    placeholder="Username baru"
+                    className="font-body pl-10"
+                    autoComplete="username"
+                  />
+                </div>
+              </FieldGroup>
+
+              {/* Password lama */}
+              <FieldGroup
+                label="Password Lama"
+                hint="Verifikasi identitas Anda"
+              >
+                <div className="relative">
+                  <KeyRound
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                    style={{ color: "oklch(0.60 0 0)" }}
+                  />
+                  <Input
+                    data-ocid="admin.keamanan.old_password_input"
+                    type={showOldPwd ? "text" : "password"}
+                    value={secOldPassword}
+                    onChange={(e) => {
+                      setSecOldPassword(e.target.value);
+                      setSecError(null);
+                    }}
+                    placeholder="Password saat ini"
+                    className="font-body pl-10 pr-10"
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowOldPwd((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-70 transition-opacity"
+                  >
+                    {showOldPwd ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </FieldGroup>
+
+              {/* Password baru */}
+              <FieldGroup label="Password Baru" hint="Minimal 6 karakter">
+                <div className="relative">
+                  <KeyRound
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                    style={{ color: "oklch(0.60 0 0)" }}
+                  />
+                  <Input
+                    data-ocid="admin.keamanan.new_password_input"
+                    type={showNewPwd ? "text" : "password"}
+                    value={secNewPassword}
+                    onChange={(e) => {
+                      setSecNewPassword(e.target.value);
+                      setSecError(null);
+                    }}
+                    placeholder="Password baru"
+                    className="font-body pl-10 pr-10"
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowNewPwd((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-70 transition-opacity"
+                  >
+                    {showNewPwd ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </FieldGroup>
+
+              {/* Konfirmasi password */}
+              <FieldGroup label="Konfirmasi Password Baru">
+                <div className="relative">
+                  <KeyRound
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4"
+                    style={{ color: "oklch(0.60 0 0)" }}
+                  />
+                  <Input
+                    data-ocid="admin.keamanan.confirm_password_input"
+                    type={showConfirmPwd ? "text" : "password"}
+                    value={secConfirmPassword}
+                    onChange={(e) => {
+                      setSecConfirmPassword(e.target.value);
+                      setSecError(null);
+                    }}
+                    placeholder="Ulangi password baru"
+                    className="font-body pl-10 pr-10"
+                    autoComplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    tabIndex={-1}
+                    onClick={() => setShowConfirmPwd((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-70 transition-opacity"
+                  >
+                    {showConfirmPwd ? (
+                      <EyeOff className="w-4 h-4" />
+                    ) : (
+                      <Eye className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+              </FieldGroup>
+
+              {secError && (
+                <p
+                  data-ocid="admin.keamanan.error_state"
+                  className="font-body text-xs py-2 px-3 rounded-lg"
+                  style={{
+                    background: "oklch(0.97 0.02 25)",
+                    color: "oklch(0.50 0.20 25)",
+                    border: "1px solid oklch(0.90 0.05 25)",
+                  }}
+                >
+                  {secError}
+                </p>
+              )}
+
+              <Button
+                data-ocid="admin.keamanan.save_button"
+                type="submit"
+                disabled={secSaving}
+                className="font-body font-semibold gap-2"
+                style={{ background: "oklch(0.47 0.22 25)", color: "white" }}
+              >
+                {secSaving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                Simpan Kredensial
+              </Button>
+            </form>
           </div>
         </TabsContent>
       </Tabs>
