@@ -1,4 +1,5 @@
-import LeafletMap from "@/components/LeafletMap";
+import { Suspense, lazy } from "react";
+const LeafletMap = lazy(() => import("@/components/LeafletMap"));
 import type { MapMarker } from "@/components/LeafletMap";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -45,7 +46,7 @@ import {
 const LOGO_URL =
   "/assets/uploads/55406_original_FB_IMG_1553487322630-removebg-preview-1.png";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   useGetArticles,
@@ -530,7 +531,7 @@ function HeroSection() {
 
 // ─── Tentang Section ──────────────────────────────────────────────────────────
 
-function TentangSection() {
+const TentangSection = memo(function TentangSection() {
   return (
     <section id="tentang" className="py-20 lg:py-28 bg-white">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -648,11 +649,11 @@ function TentangSection() {
       </div>
     </section>
   );
-}
+});
 
 // ─── Statistik Section ────────────────────────────────────────────────────────
 
-function StatistikSection() {
+const StatistikSection = memo(function StatistikSection() {
   const stats = [
     {
       value: 10000,
@@ -740,7 +741,7 @@ function StatistikSection() {
       </div>
     </section>
   );
-}
+});
 
 // ─── Program Section ──────────────────────────────────────────────────────────
 
@@ -1060,13 +1061,32 @@ function PetaSection() {
               </div>
             </div>
           ) : (
-            <LeafletMap
-              markers={mapMarkers}
-              height={400}
-              fitBounds={mapMarkers.length > 1}
-              zoom={13}
-              className="shadow-card"
-            />
+            <Suspense
+              fallback={
+                <div
+                  className="w-full rounded-2xl flex items-center justify-center border border-border shadow-card"
+                  style={{
+                    height: "400px",
+                    background: "oklch(0.96 0.01 230)",
+                  }}
+                >
+                  <div className="text-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-garda-blue mx-auto mb-2" />
+                    <p className="font-body text-sm text-foreground/50">
+                      Memuat peta...
+                    </p>
+                  </div>
+                </div>
+              }
+            >
+              <LeafletMap
+                markers={mapMarkers}
+                height={400}
+                fitBounds={mapMarkers.length > 1}
+                zoom={13}
+                className="shadow-card"
+              />
+            </Suspense>
           )}
         </motion.div>
 

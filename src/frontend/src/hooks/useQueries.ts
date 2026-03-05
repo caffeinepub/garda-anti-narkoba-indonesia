@@ -30,6 +30,7 @@ export function useGetPrograms() {
       return actor.getPrograms();
     },
     enabled: !!actor && !isFetching,
+    staleTime: 5 * 60 * 1000, // 5 min -- avoid re-fetching on every render
   });
 }
 
@@ -43,6 +44,7 @@ export function useGetArticles() {
       return actor.getArticles();
     },
     enabled: !!actor && !isFetching,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -103,6 +105,7 @@ export function useGetVolunteers() {
       return actor.getVolunteers();
     },
     enabled: !!actor && !isFetching,
+    staleTime: 2 * 60 * 1000,
   });
 }
 
@@ -266,6 +269,7 @@ export function useGetMessages() {
       return actor.getMessages();
     },
     enabled: !!actor && !isFetching,
+    staleTime: 2 * 60 * 1000,
   });
 }
 
@@ -291,7 +295,7 @@ function saveLocalSettings(settings: SiteSettings): void {
 }
 
 export function useGetSiteSettings() {
-  const { actor, isFetching } = useActor();
+  const { actor } = useActor();
   return useQuery<SiteSettings | null>({
     queryKey: ["siteSettings"],
     queryFn: async () => {
@@ -305,7 +309,11 @@ export function useGetSiteSettings() {
         return null;
       }
     },
-    enabled: !!actor && !isFetching,
+    // Allow the query to run immediately even before actor is ready --
+    // if localStorage has settings we can show them straight away without
+    // waiting for the ICP actor to initialise.
+    enabled: true,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -362,6 +370,7 @@ export function useGetLocations() {
     queryFn: async () => {
       return loadLocalLocations();
     },
+    staleTime: 60 * 1000, // localStorage reads are instant -- no need to refetch every second
   });
 }
 
@@ -424,6 +433,7 @@ export function useGetGalleryItems() {
     queryFn: async () => {
       return loadLocalGallery();
     },
+    staleTime: 60 * 1000,
   });
 }
 
@@ -461,5 +471,6 @@ export function useIsCallerAdmin() {
       return actor.isCallerAdmin();
     },
     enabled: !!actor && !isFetching,
+    staleTime: 5 * 60 * 1000,
   });
 }
