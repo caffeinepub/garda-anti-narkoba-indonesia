@@ -17,27 +17,32 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: false,
-      staleTime: 5 * 60 * 1000,
+      retry: 1,
     },
   },
 });
 
 // Determine which app to render based on URL path
-const isAdminPath = window.location.pathname.startsWith("/admin");
+// This check happens BEFORE any React rendering
+const isAdminRoute = window.location.pathname.startsWith("/admin");
 
-async function renderApp() {
-  if (isAdminPath) {
+async function bootstrap() {
+  const rootEl = document.getElementById("root");
+  if (!rootEl) return;
+
+  const root = ReactDOM.createRoot(rootEl);
+
+  if (isAdminRoute) {
+    // Dynamically import AdminApp only when needed
     const { default: AdminApp } = await import("./AdminApp");
-    ReactDOM.createRoot(document.getElementById("root")!).render(
+    root.render(
       <QueryClientProvider client={queryClient}>
-        <InternetIdentityProvider>
-          <AdminApp />
-        </InternetIdentityProvider>
+        <AdminApp />
       </QueryClientProvider>,
     );
   } else {
     const { default: App } = await import("./App");
-    ReactDOM.createRoot(document.getElementById("root")!).render(
+    root.render(
       <QueryClientProvider client={queryClient}>
         <InternetIdentityProvider>
           <App />
@@ -47,4 +52,4 @@ async function renderApp() {
   }
 }
 
-renderApp();
+bootstrap();
