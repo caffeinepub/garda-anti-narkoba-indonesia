@@ -370,7 +370,7 @@ export function useGetLocations() {
     queryFn: async () => {
       return loadLocalLocations();
     },
-    staleTime: 60 * 1000, // localStorage reads are instant -- no need to refetch every second
+    staleTime: 0, // always fresh so mutations are reflected immediately
   });
 }
 
@@ -381,7 +381,10 @@ export function useAddLocation() {
       const existing = loadLocalLocations();
       saveLocalLocations([...existing, data]);
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["locations"] }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["locations"] });
+      await queryClient.refetchQueries({ queryKey: ["locations"] });
+    },
   });
 }
 
@@ -392,7 +395,10 @@ export function useDeleteLocation() {
       const existing = loadLocalLocations();
       saveLocalLocations(existing.filter((l) => l.id !== id));
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["locations"] }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["locations"] });
+      await queryClient.refetchQueries({ queryKey: ["locations"] });
+    },
   });
 }
 

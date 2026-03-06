@@ -1,6 +1,3 @@
-import { Suspense, lazy } from "react";
-const LeafletMap = lazy(() => import("@/components/LeafletMap"));
-import type { MapMarker } from "@/components/LeafletMap";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,7 +48,6 @@ import { toast } from "sonner";
 import {
   useGetArticles,
   useGetGalleryItems,
-  useGetLocations,
   useGetPrograms,
   useGetSiteSettings,
   useRegisterVolunteer,
@@ -224,7 +220,6 @@ function Navbar() {
     { id: "beranda", label: "Beranda", ocid: "nav.beranda_link" },
     { id: "tentang", label: "Tentang", ocid: "nav.tentang_link" },
     { id: "program", label: "Program", ocid: "nav.program_link" },
-    { id: "peta", label: "Peta", ocid: "nav.peta_link" },
     { id: "berita", label: "Berita", ocid: "nav.berita_link" },
     { id: "galeri", label: "Galeri", ocid: "nav.galeri_link" },
     { id: "bergabung", label: "Bergabung", ocid: "nav.bergabung_link" },
@@ -979,177 +974,6 @@ function BeritaSection() {
           )}
         </DialogContent>
       </Dialog>
-    </section>
-  );
-}
-
-// ─── Peta Section ────────────────────────────────────────────────────────────
-
-function PetaSection() {
-  const { data: locations, isLoading } = useGetLocations();
-  const hasLocations = locations && locations.length > 0;
-
-  const mapMarkers: MapMarker[] = (locations ?? []).map((loc) => ({
-    id: loc.id,
-    lat: loc.latitude,
-    lng: loc.longitude,
-    title: loc.nama,
-    subtitle: `${loc.kota}, ${loc.provinsi}`,
-  }));
-
-  const formatTanggal = (tanggal: string) => {
-    if (!tanggal) return "-";
-    const d = new Date(tanggal);
-    return d.toLocaleDateString("id-ID", {
-      day: "numeric",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
-  const locationOcids = [
-    "peta.item.1",
-    "peta.item.2",
-    "peta.item.3",
-    "peta.item.4",
-    "peta.item.5",
-    "peta.item.6",
-  ];
-
-  return (
-    <section id="peta" className="py-20 lg:py-28 bg-white">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
-        >
-          <div className="inline-flex items-center gap-2 mb-4 text-garda-blue font-body font-semibold text-sm tracking-widest uppercase">
-            <div className="w-8 h-0.5 bg-garda-blue" />
-            Sebaran Wilayah
-            <div className="w-8 h-0.5 bg-garda-blue" />
-          </div>
-          <h2 className="font-display font-black text-4xl lg:text-5xl text-foreground">
-            Sebaran Lokasi Penyuluhan
-          </h2>
-          <p className="font-body text-foreground/60 text-lg mt-4 max-w-2xl mx-auto">
-            Peta interaktif lokasi kegiatan sosialisasi dan penyuluhan anti
-            narkoba yang telah dilaksanakan di seluruh Indonesia.
-          </p>
-        </motion.div>
-
-        {/* Map */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          whileInView={{ opacity: 1, scale: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="mb-10"
-        >
-          {isLoading ? (
-            <div
-              data-ocid="peta.loading_state"
-              className="w-full rounded-2xl flex items-center justify-center border border-border shadow-card"
-              style={{ height: "400px", background: "oklch(0.96 0.01 230)" }}
-            >
-              <div className="text-center">
-                <Loader2 className="w-8 h-8 animate-spin text-garda-blue mx-auto mb-2" />
-                <p className="font-body text-sm text-foreground/50">
-                  Memuat peta...
-                </p>
-              </div>
-            </div>
-          ) : (
-            <Suspense
-              fallback={
-                <div
-                  className="w-full rounded-2xl flex items-center justify-center border border-border shadow-card"
-                  style={{
-                    height: "400px",
-                    background: "oklch(0.96 0.01 230)",
-                  }}
-                >
-                  <div className="text-center">
-                    <Loader2 className="w-8 h-8 animate-spin text-garda-blue mx-auto mb-2" />
-                    <p className="font-body text-sm text-foreground/50">
-                      Memuat peta...
-                    </p>
-                  </div>
-                </div>
-              }
-            >
-              <LeafletMap
-                markers={mapMarkers}
-                height={400}
-                fitBounds={mapMarkers.length > 1}
-                zoom={13}
-                className="shadow-card"
-              />
-            </Suspense>
-          )}
-        </motion.div>
-
-        {/* Location Cards */}
-        {isLoading ? null : !hasLocations ? (
-          <div
-            data-ocid="peta.empty_state"
-            className="text-center py-10 px-6 rounded-2xl border border-dashed border-border bg-secondary/20"
-          >
-            <MapPin className="w-10 h-10 text-foreground/25 mx-auto mb-3" />
-            <p className="font-display font-bold text-foreground/50 text-lg mb-1">
-              Belum ada data lokasi penyuluhan
-            </p>
-            <p className="font-body text-sm text-foreground/40">
-              Data lokasi yang diinput admin akan ditampilkan di sini.
-            </p>
-          </div>
-        ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {locations.slice(0, 6).map((loc, idx) => (
-              <motion.div
-                key={loc.id}
-                data-ocid={locationOcids[idx] ?? `peta.item.${idx + 1}`}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.4, delay: idx * 0.07 }}
-                className="bg-white rounded-xl border border-border p-5 hover:shadow-card-hover transition-all duration-200"
-              >
-                <div className="flex items-start gap-3 mb-3">
-                  <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: "oklch(0.42 0.20 230 / 0.08)" }}
-                  >
-                    <MapPin
-                      className="w-4 h-4"
-                      style={{ color: "oklch(0.42 0.20 230)" }}
-                    />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-display font-bold text-sm text-foreground leading-tight line-clamp-2">
-                      {loc.nama}
-                    </h3>
-                    <p className="font-body text-xs text-foreground/50 mt-0.5">
-                      {loc.kota}, {loc.provinsi}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-1.5 font-body text-xs text-foreground/55">
-                    <Calendar className="w-3 h-3 flex-shrink-0" />
-                    {formatTanggal(loc.tanggalKegiatan)}
-                  </div>
-                  <div className="flex items-center gap-1.5 font-body text-xs text-foreground/55">
-                    <Users className="w-3 h-3 flex-shrink-0" />
-                    {Number(loc.jumlahPeserta).toLocaleString("id-ID")} peserta
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </div>
     </section>
   );
 }
@@ -2119,7 +1943,6 @@ export default function App() {
         <HeroSection />
         <TentangSection />
         <StatistikSection />
-        <PetaSection />
         <ProgramSection />
         <BeritaSection />
         <GaleriSection />

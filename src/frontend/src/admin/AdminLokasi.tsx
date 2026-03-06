@@ -1,4 +1,3 @@
-import LeafletMap from "@/components/LeafletMap";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,21 +96,6 @@ const EMPTY_FORM: LocationForm = {
   keterangan: "",
 };
 
-function MapPreview({
-  lat,
-  lng,
-  title,
-}: { lat: number; lng: number; title?: string }) {
-  return (
-    <LeafletMap
-      markers={[{ id: "preview", lat, lng, title: title ?? "Lokasi" }]}
-      height={300}
-      fitBounds={false}
-      zoom={14}
-    />
-  );
-}
-
 export default function AdminLokasi() {
   const [form, setForm] = useState<LocationForm>(EMPTY_FORM);
   const { data: locations, isLoading } = useGetLocations();
@@ -123,31 +107,49 @@ export default function AdminLokasi() {
   const parsedLat = Number.parseFloat(form.latitude) || DEFAULT_LAT;
   const parsedLng = Number.parseFloat(form.longitude) || DEFAULT_LNG;
 
-  const hasCoords = form.latitude.trim() !== "" && form.longitude.trim() !== "";
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate required fields
+    if (!form.nama.trim()) {
+      toast.error("Nama kegiatan wajib diisi");
+      return;
+    }
+    if (!form.alamat.trim()) {
+      toast.error("Alamat lengkap wajib diisi");
+      return;
+    }
+    if (!form.kota.trim()) {
+      toast.error("Kota / Kabupaten wajib diisi");
+      return;
+    }
     if (!form.provinsi) {
       toast.error("Silakan pilih provinsi");
       return;
     }
+    if (!form.tanggalKegiatan) {
+      toast.error("Tanggal kegiatan wajib diisi");
+      return;
+    }
+
     const location: Location = {
       id: generateId(),
-      nama: form.nama,
-      alamat: form.alamat,
-      kota: form.kota,
+      nama: form.nama.trim(),
+      alamat: form.alamat.trim(),
+      kota: form.kota.trim(),
       provinsi: form.provinsi,
       tanggalKegiatan: form.tanggalKegiatan,
       jumlahPeserta: BigInt(Number.parseInt(form.jumlahPeserta, 10) || 0),
       latitude: parsedLat,
       longitude: parsedLng,
-      keterangan: form.keterangan,
+      keterangan: form.keterangan.trim(),
     };
     try {
       await addLocation(location);
       setForm(EMPTY_FORM);
       toast.success("Data lokasi berhasil disimpan!");
-    } catch {
+    } catch (err) {
+      console.error("Gagal menyimpan lokasi:", err);
       toast.error("Gagal menyimpan data lokasi. Coba lagi.");
     }
   };
@@ -396,28 +398,6 @@ export default function AdminLokasi() {
             </p>
           </div>
 
-          {/* Map Preview */}
-          <div className="space-y-2">
-            <Label className="font-body font-semibold text-sm text-foreground">
-              Pratinjau Peta{" "}
-              {!hasCoords && (
-                <span className="text-foreground/40 font-normal">
-                  (default: Jakarta)
-                </span>
-              )}
-            </Label>
-            <MapPreview
-              lat={parsedLat}
-              lng={parsedLng}
-              title={form.nama || "Pratinjau"}
-            />
-            {hasCoords && (
-              <p className="font-body text-xs text-foreground/50">
-                📍 {parsedLat.toFixed(4)}, {parsedLng.toFixed(4)}
-              </p>
-            )}
-          </div>
-
           {/* Keterangan */}
           <div className="space-y-1.5">
             <Label
@@ -539,27 +519,6 @@ export default function AdminLokasi() {
                 transition={{ duration: 0.3, delay: idx * 0.05 }}
                 className="px-6 py-5 flex flex-col sm:flex-row sm:items-start gap-4 hover:bg-secondary/20 transition-colors"
               >
-                {/* Map thumbnail */}
-                <div
-                  className="flex-shrink-0 w-full sm:w-32"
-                  style={{ height: "80px" }}
-                >
-                  <LeafletMap
-                    markers={[
-                      {
-                        id: loc.id,
-                        lat: loc.latitude,
-                        lng: loc.longitude,
-                        title: loc.nama,
-                      },
-                    ]}
-                    height={80}
-                    fitBounds={false}
-                    zoom={13}
-                    className="pointer-events-none"
-                  />
-                </div>
-
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-3">
