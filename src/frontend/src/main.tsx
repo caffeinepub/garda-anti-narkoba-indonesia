@@ -1,7 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import ReactDOM from "react-dom/client";
-import AdminApp from "./AdminApp";
-import App from "./App";
 import { InternetIdentityProvider } from "./hooks/useInternetIdentity";
 import "../index.css";
 
@@ -24,14 +22,29 @@ const queryClient = new QueryClient({
   },
 });
 
-// Determine which app to render based on the URL path.
-// This check happens once at module load time and is stable.
+// Determine which app to render based on URL path
 const isAdminPath = window.location.pathname.startsWith("/admin");
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <QueryClientProvider client={queryClient}>
-    <InternetIdentityProvider>
-      {isAdminPath ? <AdminApp /> : <App />}
-    </InternetIdentityProvider>
-  </QueryClientProvider>,
-);
+async function renderApp() {
+  if (isAdminPath) {
+    const { default: AdminApp } = await import("./AdminApp");
+    ReactDOM.createRoot(document.getElementById("root")!).render(
+      <QueryClientProvider client={queryClient}>
+        <InternetIdentityProvider>
+          <AdminApp />
+        </InternetIdentityProvider>
+      </QueryClientProvider>,
+    );
+  } else {
+    const { default: App } = await import("./App");
+    ReactDOM.createRoot(document.getElementById("root")!).render(
+      <QueryClientProvider client={queryClient}>
+        <InternetIdentityProvider>
+          <App />
+        </InternetIdentityProvider>
+      </QueryClientProvider>,
+    );
+  }
+}
+
+renderApp();

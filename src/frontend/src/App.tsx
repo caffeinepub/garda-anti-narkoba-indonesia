@@ -48,12 +48,18 @@ import { toast } from "sonner";
 import {
   useGetArticles,
   useGetGalleryItems,
+  useGetLocations,
   useGetPrograms,
   useGetSiteSettings,
   useRegisterVolunteer,
   useSendMessage,
 } from "./hooks/useQueries";
-import type { Article, GalleryItem, Program } from "./hooks/useQueries";
+import type {
+  Article,
+  GalleryItem,
+  Location,
+  Program,
+} from "./hooks/useQueries";
 
 // ─── Sample Data ─────────────────────────────────────────────────────────────
 
@@ -222,6 +228,7 @@ function Navbar() {
     { id: "program", label: "Program", ocid: "nav.program_link" },
     { id: "berita", label: "Berita", ocid: "nav.berita_link" },
     { id: "galeri", label: "Galeri", ocid: "nav.galeri_link" },
+    { id: "lokasi", label: "Lokasi", ocid: "nav.lokasi_link" },
     { id: "bergabung", label: "Bergabung", ocid: "nav.bergabung_link" },
     { id: "kontak", label: "Kontak", ocid: "nav.kontak_link" },
   ];
@@ -1268,6 +1275,170 @@ function GaleriSection() {
   );
 }
 
+// ─── Lokasi Penyuluhan Section ────────────────────────────────────────────────
+
+function LokasiSection() {
+  const { data: locations, isLoading } = useGetLocations();
+
+  const formatTanggal = (tanggal: string) => {
+    if (!tanggal) return "-";
+    const d = new Date(tanggal);
+    return d.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  if (!isLoading && (!locations || locations.length === 0)) return null;
+
+  return (
+    <section id="lokasi" className="py-20 lg:py-28 bg-white">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-12"
+        >
+          <div
+            className="inline-flex items-center gap-2 mb-4 font-body font-semibold text-sm tracking-widest uppercase"
+            style={{ color: "oklch(0.42 0.20 230)" }}
+          >
+            <div
+              className="w-8 h-0.5"
+              style={{ background: "oklch(0.42 0.20 230)" }}
+            />
+            Penyuluhan
+            <div
+              className="w-8 h-0.5"
+              style={{ background: "oklch(0.42 0.20 230)" }}
+            />
+          </div>
+          <h2 className="font-display font-black text-4xl lg:text-5xl text-foreground">
+            Lokasi Penyuluhan
+          </h2>
+          <p className="font-body text-foreground/60 text-lg mt-4 max-w-2xl mx-auto">
+            Sebaran kegiatan sosialisasi anti narkoba yang telah dilaksanakan
+            GARDA di seluruh Indonesia.
+          </p>
+        </motion.div>
+
+        {isLoading ? (
+          <div
+            data-ocid="lokasi_publik.loading_state"
+            className="flex justify-center py-20"
+          >
+            <Loader2
+              className="w-8 h-8 animate-spin"
+              style={{ color: "oklch(0.42 0.20 230)" }}
+            />
+          </div>
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {(locations ?? []).map((loc: Location, idx: number) => (
+              <motion.div
+                key={loc.id}
+                data-ocid={`lokasi_publik.item.${idx + 1}`}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: idx * 0.07 }}
+                className="bg-white rounded-xl border border-border hover:shadow-card-hover transition-all duration-200 overflow-hidden group"
+                style={{ borderTop: "3px solid oklch(0.42 0.20 230)" }}
+              >
+                <div className="p-5">
+                  {/* Header */}
+                  <div className="flex items-start gap-3 mb-3">
+                    <div
+                      className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center mt-0.5"
+                      style={{ background: "oklch(0.42 0.20 230 / 0.1)" }}
+                    >
+                      <MapPin
+                        className="w-4 h-4"
+                        style={{ color: "oklch(0.42 0.20 230)" }}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-display font-bold text-sm text-foreground leading-snug line-clamp-2">
+                        {loc.nama}
+                      </h3>
+                      <p className="font-body text-xs text-foreground/55 mt-0.5 line-clamp-1">
+                        {loc.alamat}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Location badges */}
+                  <div className="flex flex-wrap gap-2 mb-3">
+                    <span
+                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-body font-semibold border"
+                      style={{
+                        background: "oklch(0.42 0.20 230 / 0.07)",
+                        borderColor: "oklch(0.42 0.20 230 / 0.2)",
+                        color: "oklch(0.30 0.18 230)",
+                      }}
+                    >
+                      {loc.kota}
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-body text-foreground/60 bg-secondary/60 border border-border">
+                      {loc.provinsi}
+                    </span>
+                  </div>
+
+                  {/* Meta info */}
+                  <div className="flex items-center gap-4 text-xs font-body text-foreground/50 border-t border-border pt-3 mt-3">
+                    <span className="inline-flex items-center gap-1">
+                      <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                      {formatTanggal(loc.tanggalKegiatan)}
+                    </span>
+                    {Number(loc.jumlahPeserta) > 0 && (
+                      <span className="inline-flex items-center gap-1">
+                        <Users className="w-3.5 h-3.5 flex-shrink-0" />
+                        {Number(loc.jumlahPeserta).toLocaleString("id-ID")}{" "}
+                        peserta
+                      </span>
+                    )}
+                  </div>
+
+                  {loc.keterangan && (
+                    <p className="font-body text-xs text-foreground/45 mt-2 line-clamp-2 italic">
+                      {loc.keterangan}
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {/* Summary badge */}
+        {locations && locations.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="mt-10 text-center"
+          >
+            <div
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full border font-body text-sm font-semibold"
+              style={{
+                background: "oklch(0.42 0.20 230 / 0.07)",
+                borderColor: "oklch(0.42 0.20 230 / 0.25)",
+                color: "oklch(0.30 0.18 230)",
+              }}
+            >
+              <MapPin className="w-4 h-4" />
+              Total {locations.length} lokasi penyuluhan tercatat
+            </div>
+          </motion.div>
+        )}
+      </div>
+    </section>
+  );
+}
+
 // ─── Bergabung Section ────────────────────────────────────────────────────────
 
 function BergabungSection() {
@@ -1860,6 +2031,7 @@ function Footer() {
                 { label: "Tentang Kami", id: "tentang" },
                 { label: "Program", id: "program" },
                 { label: "Berita", id: "berita" },
+                { label: "Lokasi", id: "lokasi" },
                 { label: "Bergabung", id: "bergabung" },
                 { label: "Kontak", id: "kontak" },
               ].map((link) => (
@@ -1946,6 +2118,7 @@ export default function App() {
         <ProgramSection />
         <BeritaSection />
         <GaleriSection />
+        <LokasiSection />
         <BergabungSection />
         <KontakSection />
       </main>
